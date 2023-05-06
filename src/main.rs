@@ -1,5 +1,8 @@
+#![allow(dead_code)]
+
 mod args;
 mod ast;
+mod eval;
 mod lexer;
 mod parser;
 mod token;
@@ -18,10 +21,17 @@ fn main() -> anyhow::Result<()> {
             let lexer = lexer::Lexer::new(input);
             let tokens = lexer.tokenize()?;
 
-            let mut parser = parser::Parser::new(tokens);
+            // Parse tokens into AST
+            let mut parser = parser::Parser::new(&tokens);
             let ast = parser.parse()?;
 
-            dbg!(ast);
+            dbg!(&ast);
+
+            // Evaluate the AST
+            let evaluator = eval::Evaluator::new(&ast);
+            let value = evaluator.eval();
+
+            println!("{}", value);
         }
     }
 

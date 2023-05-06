@@ -1,12 +1,12 @@
 use crate::{ast, token::Token};
 
-pub struct Parser {
-    pub tokens: Vec<Token>,
+pub struct Parser<'a> {
+    pub tokens: &'a Vec<Token>,
     pub position: usize,
 }
 
-impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
+impl<'a> Parser<'a> {
+    pub fn new(tokens: &'a Vec<Token>) -> Self {
         Self {
             tokens,
             position: 0,
