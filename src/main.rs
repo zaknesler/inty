@@ -5,6 +5,7 @@ mod ast;
 mod eval;
 mod lexer;
 mod parser;
+mod test;
 mod token;
 
 use clap::Parser;
@@ -50,7 +51,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
+pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
     // Tokenize input
     let lexer = lexer::Lexer::new(input);
     let tokens = lexer.tokenize()?;

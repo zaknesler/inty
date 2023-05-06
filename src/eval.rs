@@ -37,7 +37,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_single_number() {
+    fn single_number() {
         assert_eq!(
             100,
             Evaluator {
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_addition() {
+    fn basic_addition() {
         assert_eq!(
             3,
             Evaluator {

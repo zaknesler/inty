@@ -43,7 +43,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tokenize() {
+    fn tokenize() {
         let lexer = Lexer::new("1 + 2 - 3 * 4 / 5".to_string());
         let tokens = lexer.tokenize().unwrap();
 
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tokenize_paren() {
+    fn tokenize_paren() {
         let lexer = Lexer::new("1 + (2 - 3) * 4 / 5".to_string());
         let tokens = lexer.tokenize().unwrap();
 
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tokenize_error() {
+    fn tokenize_error() {
         let lexer = Lexer::new("1 + 2 - 3 * 4 / 5 + a".to_string());
         let tokens = lexer.tokenize();
 

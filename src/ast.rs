@@ -1,6 +1,6 @@
 use crate::token::Token;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Ast {
     pub root: Expr,
 }
