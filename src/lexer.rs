@@ -24,10 +24,11 @@ impl Lexer {
                     }
                     Token::Integer(number.parse::<i32>()?)
                 }
-                '+' => Token::PlusSign,
-                '-' => Token::MinusSign,
-                '*' => Token::TimesSign,
-                '/' => Token::DivideSign,
+                '+' => Token::Plus,
+                '-' => Token::Hyphen,
+                '*' => Token::Star,
+                '/' => Token::Divide,
+                '^' => Token::Caret,
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
                 _ => anyhow::bail!("Unexpected token: {}", ch),
@@ -51,13 +52,13 @@ mod tests {
             tokens,
             vec![
                 Token::Integer(1),
-                Token::PlusSign,
+                Token::Plus,
                 Token::Integer(2),
-                Token::MinusSign,
+                Token::Hyphen,
                 Token::Integer(3),
-                Token::TimesSign,
+                Token::Star,
                 Token::Integer(4),
-                Token::DivideSign,
+                Token::Divide,
                 Token::Integer(5),
             ]
         );
@@ -72,15 +73,15 @@ mod tests {
             tokens,
             vec![
                 Token::Integer(1),
-                Token::PlusSign,
+                Token::Plus,
                 Token::LeftParen,
                 Token::Integer(2),
-                Token::MinusSign,
+                Token::Hyphen,
                 Token::Integer(3),
                 Token::RightParen,
-                Token::TimesSign,
+                Token::Star,
                 Token::Integer(4),
-                Token::DivideSign,
+                Token::Divide,
                 Token::Integer(5),
             ]
         );

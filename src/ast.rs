@@ -33,13 +33,14 @@ pub enum BinOp {
     Sub,
     Mul,
     Div,
+    Pow,
 }
 
 impl From<Token> for UnOp {
     fn from(value: Token) -> Self {
         match value {
-            Token::MinusSign => UnOp::Minus,
-            Token::PlusSign => UnOp::Plus,
+            Token::Hyphen => UnOp::Minus,
+            Token::Plus => UnOp::Plus,
             _ => panic!("Invalid token"),
         }
     }
@@ -48,10 +49,11 @@ impl From<Token> for UnOp {
 impl From<Token> for BinOp {
     fn from(value: Token) -> Self {
         match value {
-            Token::PlusSign => BinOp::Add,
-            Token::MinusSign => BinOp::Sub,
-            Token::TimesSign => BinOp::Mul,
-            Token::DivideSign => BinOp::Div,
+            Token::Plus => BinOp::Add,
+            Token::Hyphen => BinOp::Sub,
+            Token::Star => BinOp::Mul,
+            Token::Divide => BinOp::Div,
+            Token::Caret => BinOp::Pow,
             _ => panic!("Invalid token"),
         }
     }

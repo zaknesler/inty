@@ -30,7 +30,7 @@ impl<'a> Parser<'a> {
             let operator = self.tokens[self.position].clone();
 
             match operator {
-                Token::PlusSign | Token::MinusSign => {
+                Token::Plus | Token::Hyphen => {
                     self.position += 1;
                     let rhs = self.parse_term()?;
                     lhs = ast::Expr::Binary {
@@ -56,7 +56,7 @@ impl<'a> Parser<'a> {
 
         let operator = self.tokens[self.position].clone();
         match operator {
-            Token::TimesSign | Token::DivideSign => {
+            Token::Star | Token::Divide | Token::Caret => {
                 self.position += 1;
                 let rhs = self.parse_term()?;
 
@@ -80,7 +80,7 @@ impl<'a> Parser<'a> {
                 Ok(ast::Expr::Integer(value))
             }
 
-            Token::MinusSign | Token::PlusSign => {
+            Token::Hyphen | Token::Plus => {
                 self.position += 1;
                 let expr = self.parse_factor()?;
 
@@ -138,7 +138,7 @@ mod tests {
                     value: Box::new(ast::Expr::Integer(1))
                 }
             },
-            Parser::new(&vec![Token::PlusSign, Token::Integer(1)])
+            Parser::new(&vec![Token::Plus, Token::Integer(1)])
                 .parse()
                 .unwrap()
         );
@@ -150,7 +150,7 @@ mod tests {
                     value: Box::new(ast::Expr::Integer(1))
                 }
             },
-            Parser::new(&vec![Token::MinusSign, Token::Integer(1)])
+            Parser::new(&vec![Token::Hyphen, Token::Integer(1)])
                 .parse()
                 .unwrap()
         );
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn parsing_binary_expression() {
-        let ast = Parser::new(&vec![Token::Integer(1), Token::PlusSign, Token::Integer(2)])
+        let ast = Parser::new(&vec![Token::Integer(1), Token::Plus, Token::Integer(2)])
             .parse()
             .unwrap();
 

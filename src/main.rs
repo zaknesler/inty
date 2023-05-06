@@ -66,5 +66,5 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
 
     // Evaluate the AST
     let evaluator = eval::Evaluator::new(&ast);
-    Ok(evaluator.eval())
+    evaluator.eval()
 }
