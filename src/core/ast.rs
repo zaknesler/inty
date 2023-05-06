@@ -1,4 +1,4 @@
-use crate::token::Token;
+use super::Token;
 
 #[derive(Debug, PartialEq)]
 pub struct Ast {

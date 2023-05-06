@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
 mod args;
-mod ast;
+mod core;
 mod eval;
 mod lexer;
 mod parser;
 mod test;
-mod token;
 
 use clap::Parser;
 use std::io::{self, BufRead, Write};

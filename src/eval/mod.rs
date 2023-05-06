@@ -1,4 +1,4 @@
-use crate::ast::{Ast, BinOp, Expr, UnOp};
+use crate::core::*;
 
 pub struct Evaluator<'a> {
     ast: &'a Ast,

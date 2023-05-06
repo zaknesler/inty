@@ -1,4 +1,4 @@
-use crate::{ast, token::Token};
+use crate::core::*;
 
 pub struct Parser<'a> {
     pub tokens: &'a Vec<Token>,
@@ -14,14 +14,14 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a list of tokens into an AST
-    pub fn parse(&mut self) -> anyhow::Result<ast::Ast> {
+    pub fn parse(&mut self) -> anyhow::Result<Ast> {
         let root = self.parse_expr()?;
 
-        Ok(ast::Ast { root })
+        Ok(Ast { root })
     }
 
     /// Recursively parse an expression
-    fn parse_expr(&mut self) -> anyhow::Result<ast::Expr> {
+    fn parse_expr(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_term()?;
 
         // Continue expanding the left-hand side as long as there is another
@@ -33,12 +33,14 @@ impl<'a> Parser<'a> {
                 Token::Plus | Token::Hyphen => {
                     self.position += 1;
                     let rhs = self.parse_term()?;
-                    lhs = ast::Expr::Binary {
+
+                    lhs = Expr::Binary {
                         operator: operator.into(),
                         lhs: Box::new(lhs),
                         rhs: Box::new(rhs),
                     };
                 }
+
                 _ => break,
             }
         }
@@ -47,7 +49,32 @@ impl<'a> Parser<'a> {
     }
 
     /// Recursively parse a term
-    fn parse_term(&mut self) -> anyhow::Result<ast::Expr> {
+    fn parse_term(&mut self) -> anyhow::Result<Expr> {
+        let lhs = self.parse_exp()?;
+
+        if self.position >= self.tokens.len() {
+            return Ok(lhs);
+        }
+
+        let operator = self.tokens[self.position].clone();
+        match operator {
+            Token::Star | Token::Divide => {
+                self.position += 1;
+                let rhs = self.parse_term()?;
+
+                Ok(Expr::Binary {
+                    operator: operator.into(),
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                })
+            }
+
+            _ => Ok(lhs),
+        }
+    }
+
+    /// Recursively parse an exponentiation
+    fn parse_exp(&mut self) -> anyhow::Result<Expr> {
         let lhs = self.parse_factor()?;
 
         if self.position >= self.tokens.len() {
@@ -56,11 +83,11 @@ impl<'a> Parser<'a> {
 
         let operator = self.tokens[self.position].clone();
         match operator {
-            Token::Star | Token::Divide | Token::Caret => {
+            Token::Caret => {
                 self.position += 1;
-                let rhs = self.parse_term()?;
+                let rhs = self.parse_exp()?;
 
-                Ok(ast::Expr::Binary {
+                Ok(Expr::Binary {
                     operator: operator.into(),
                     lhs: Box::new(lhs),
                     rhs: Box::new(rhs),
@@ -72,20 +99,20 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a single factor
-    fn parse_factor(&mut self) -> anyhow::Result<ast::Expr> {
+    fn parse_factor(&mut self) -> anyhow::Result<Expr> {
         let token = self.tokens[self.position].clone();
         match token {
             Token::Integer(value) => {
                 self.position += 1;
-                Ok(ast::Expr::Integer(value))
+                Ok(Expr::Integer(value))
             }
 
             Token::Hyphen | Token::Plus => {
                 self.position += 1;
-                let expr = self.parse_factor()?;
+                let expr = self.parse_exp()?;
 
-                Ok(ast::Expr::Unary {
-                    operator: ast::UnOp::from(token),
+                Ok(Expr::Unary {
+                    operator: UnOp::from(token),
                     value: Box::new(expr),
                 })
             }
@@ -113,8 +140,6 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Ast;
-
     use super::*;
 
     #[test]
@@ -123,7 +148,7 @@ mod tests {
 
         assert_eq!(
             Ast {
-                root: ast::Expr::Integer(1)
+                root: Expr::Integer(1)
             },
             ast
         );
@@ -133,9 +158,9 @@ mod tests {
     fn parsing_unary_operators() {
         assert_eq!(
             Ast {
-                root: ast::Expr::Unary {
-                    operator: ast::UnOp::Plus,
-                    value: Box::new(ast::Expr::Integer(1))
+                root: Expr::Unary {
+                    operator: UnOp::Plus,
+                    value: Box::new(Expr::Integer(1))
                 }
             },
             Parser::new(&vec![Token::Plus, Token::Integer(1)])
@@ -145,9 +170,9 @@ mod tests {
 
         assert_eq!(
             Ast {
-                root: ast::Expr::Unary {
-                    operator: ast::UnOp::Minus,
-                    value: Box::new(ast::Expr::Integer(1))
+                root: Expr::Unary {
+                    operator: UnOp::Minus,
+                    value: Box::new(Expr::Integer(1))
                 }
             },
             Parser::new(&vec![Token::Hyphen, Token::Integer(1)])
@@ -164,10 +189,10 @@ mod tests {
 
         assert_eq!(
             Ast {
-                root: ast::Expr::Binary {
-                    operator: ast::BinOp::Add,
-                    lhs: Box::new(ast::Expr::Integer(1)),
-                    rhs: Box::new(ast::Expr::Integer(2))
+                root: Expr::Binary {
+                    operator: BinOp::Add,
+                    lhs: Box::new(Expr::Integer(1)),
+                    rhs: Box::new(Expr::Integer(2))
                 }
             },
             ast
