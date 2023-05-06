@@ -9,6 +9,7 @@ impl Lexer {
         Self { input }
     }
 
+    /// Parse a string into a vector of valid tokens
     pub fn tokenize(&self) -> anyhow::Result<Vec<Token>> {
         let mut tokens = vec![];
 

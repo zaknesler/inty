@@ -9,10 +9,12 @@ impl<'a> Evaluator<'a> {
         Self { ast }
     }
 
+    /// Evaluate an AST to a single value
     pub fn eval(&self) -> i32 {
         self.eval_node(&self.ast.root)
     }
 
+    /// Recursively evaluate a single expression node
     fn eval_node(&self, node: &Expr) -> i32 {
         match node.clone() {
             Expr::Number(val) => *val,

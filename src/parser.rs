@@ -13,12 +13,14 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a list of tokens into an AST
     pub fn parse(&mut self) -> anyhow::Result<ast::Ast> {
         let root = self.parse_expr()?;
 
         Ok(ast::Ast { root })
     }
 
+    /// Recursively parse an expression
     fn parse_expr(&mut self) -> anyhow::Result<ast::Expr> {
         let lhs = self.parse_term()?;
 
@@ -42,6 +44,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Recursively parse a term
     fn parse_term(&mut self) -> anyhow::Result<ast::Expr> {
         let lhs = self.parse_factor()?;
 
@@ -64,6 +67,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a single factor
     fn parse_factor(&mut self) -> anyhow::Result<ast::Expr> {
         let token = self.tokens[self.position].clone();
         match token {
