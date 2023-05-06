@@ -7,7 +7,13 @@ pub struct Ast {
 
 #[derive(Debug, PartialEq)]
 pub enum Expr {
-    Number(i32),
+    /// Single integer value (e.g. 42)
+    Integer(i32),
+
+    /// Unary operation (e.g. +1, -2)
+    Unary { operator: UnOp, value: Box<Expr> },
+
+    /// Binary operation (e.g. 3 * 4)
     Binary {
         operator: BinOp,
         lhs: Box<Expr>,
@@ -16,11 +22,27 @@ pub enum Expr {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum UnOp {
+    Plus,
+    Minus,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum BinOp {
     Add,
     Sub,
     Mul,
     Div,
+}
+
+impl From<Token> for UnOp {
+    fn from(value: Token) -> Self {
+        match value {
+            Token::MinusSign => UnOp::Minus,
+            Token::PlusSign => UnOp::Plus,
+            _ => panic!("Invalid token"),
+        }
+    }
 }
 
 impl From<Token> for BinOp {

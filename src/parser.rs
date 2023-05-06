@@ -40,6 +40,7 @@ impl<'a> Parser<'a> {
                     rhs: Box::new(rhs),
                 })
             }
+
             _ => Ok(lhs),
         }
     }
@@ -57,12 +58,14 @@ impl<'a> Parser<'a> {
             Token::TimesSign | Token::DivideSign => {
                 self.position += 1;
                 let rhs = self.parse_term()?;
+
                 Ok(ast::Expr::Binary {
                     operator: operator.into(),
                     lhs: Box::new(lhs),
                     rhs: Box::new(rhs),
                 })
             }
+
             _ => Ok(lhs),
         }
     }
@@ -73,14 +76,27 @@ impl<'a> Parser<'a> {
         match token {
             Token::Integer(value) => {
                 self.position += 1;
-                Ok(ast::Expr::Number(value))
+                Ok(ast::Expr::Integer(value))
             }
+
+            Token::MinusSign | Token::PlusSign => {
+                self.position += 1;
+                let expr = self.parse_factor()?;
+
+                Ok(ast::Expr::Unary {
+                    operator: ast::UnOp::from(token),
+                    value: Box::new(expr),
+                })
+            }
+
             Token::LeftParen => {
                 self.position += 1;
                 let expr = self.parse_expr()?;
+
                 if self.position >= self.tokens.len() {
                     anyhow::bail!("Expected right parenthesis");
                 }
+
                 if let Token::RightParen = self.tokens[self.position] {
                     self.position += 1;
                     Ok(expr)
@@ -88,6 +104,7 @@ impl<'a> Parser<'a> {
                     anyhow::bail!("Expected right parenthesis");
                 }
             }
+
             _ => anyhow::bail!("Unexpected token: {}", token),
         }
     }

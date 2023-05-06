@@ -1,4 +1,4 @@
-use crate::ast::{Ast, BinOp, Expr};
+use crate::ast::{Ast, BinOp, Expr, UnOp};
 
 pub struct Evaluator<'a> {
     ast: &'a Ast,
@@ -17,7 +17,11 @@ impl<'a> Evaluator<'a> {
     /// Recursively evaluate a single expression node
     fn eval_node(&self, node: &Expr) -> i32 {
         match node.clone() {
-            Expr::Number(val) => *val,
+            Expr::Integer(val) => *val,
+            Expr::Unary { operator, value } => match operator {
+                UnOp::Minus => -1 * self.eval_node(value),
+                UnOp::Plus => self.eval_node(value),
+            },
             Expr::Binary { operator, lhs, rhs } => match operator {
                 BinOp::Add => self.eval_node(lhs.as_ref()) + self.eval_node(rhs.as_ref()),
                 BinOp::Sub => self.eval_node(lhs.as_ref()) - self.eval_node(rhs.as_ref()),
@@ -38,7 +42,7 @@ mod tests {
             100,
             Evaluator {
                 ast: &Ast {
-                    root: Expr::Number(100),
+                    root: Expr::Integer(100),
                 },
             }
             .eval()
@@ -53,8 +57,8 @@ mod tests {
                 ast: &Ast {
                     root: Expr::Binary {
                         operator: BinOp::Add,
-                        lhs: Box::new(Expr::Number(1)),
-                        rhs: Box::new(Expr::Number(2)),
+                        lhs: Box::new(Expr::Integer(1)),
+                        rhs: Box::new(Expr::Integer(2)),
                     },
                 },
             }
