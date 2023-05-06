@@ -5,7 +5,6 @@ mod core;
 mod eval;
 mod lexer;
 mod parser;
-mod test;
 
 use clap::Parser;
 use std::io::{self, BufRead, Write};
@@ -66,4 +65,66 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
     // Evaluate the AST
     let evaluator = eval::Evaluator::new(&ast);
     evaluator.eval()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::process_string;
+
+    #[test]
+    fn expression_evaluation() {
+        let start = line!() + 2;
+        [
+            ("1", 1),
+            ("1 + 2 + 3", 6),
+            ("1 + 2", 3),
+            ("5 - 2", 3),
+            ("-1", -1),
+            ("-5 - 2", -7),
+            ("4 + 4 + 4", 12),
+            ("6 - 2 + 5", 9),
+            ("10 - 2 + 3", 11),
+            ("-2 + (-5)", -7),
+            ("2 * 3 + 4", 10),
+            ("2 + 3 * 4", 14),
+            ("2 + 3 * 5", 17),
+            ("(2 + 3) * (4 - 1)", 15),
+            ("(2 + 3) * 4", 20),
+            ("(4 + 2) * 3", 18),
+            ("(9 + 1) * (5 - 2)", 30),
+            ("1 * 2 * 3 * 4", 24),
+            ("1 * 2", 2),
+            ("3 * 3 * 3", 27),
+            ("4 * 5 - 3", 17),
+            ("7 * 2", 14),
+            ("10 / 2", 5),
+            ("10 / 5", 2),
+            ("10 * 10 / 5", 20),
+            ("3 ^ 0", 1),
+            ("3 ^ 1", 3),
+            ("3 ^ 2", 9),
+            ("3 ^ 3", 27),
+            ("-3 ^ 2", -9),
+            ("-3 ^ 3", -27),
+            ("(-3) ^ 2", 9),
+            ("(-3) ^ 3", -27),
+            ("2 ^ 3 + 4", 12),
+            ("3 ^ 2 + 4", 13),
+            ("(-3) ^ 2 + 4", 13),
+            ("2 ^ 3 * 4 + 4", 36),
+            ("3 ^ 2 * 4 + 4", 40),
+            ("(-3) ^ 2 * 4 + 4", 40),
+        ]
+        .into_iter()
+        .enumerate()
+        .for_each(|(index, (string, val))| {
+            assert_eq!(
+                process_string(string.to_string(), false).unwrap(),
+                val,
+                "expression = \"{}\" (line {})",
+                string,
+                start + (index as u32)
+            );
+        })
+    }
 }
