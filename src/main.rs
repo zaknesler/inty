@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
     // Read file into string
     match args.command {
         args::Command::Run { file } => {
-            let input = std::fs::read_to_string(file).unwrap();
+            let input = std::fs::read_to_string(file)?;
 
             // Tokenize
             let lexer = lexer::Lexer::new(input);
