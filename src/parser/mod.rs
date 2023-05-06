@@ -243,12 +243,12 @@ mod tests {
             Ast {
                 root: Expr::Binary {
                     operator: BinOp::Pow,
-                    lhs: Box::new(Expr::Binary {
+                    lhs: Box::new(Expr::Integer(2)),
+                    rhs: Box::new(Expr::Binary {
                         operator: BinOp::Pow,
-                        lhs: Box::new(Expr::Integer(2)),
-                        rhs: Box::new(Expr::Integer(3)),
+                        lhs: Box::new(Expr::Integer(3)),
+                        rhs: Box::new(Expr::Integer(4)),
                     }),
-                    rhs: Box::new(Expr::Integer(4)),
                 }
             },
             Parser::new(&vec![
