@@ -19,8 +19,7 @@ impl Lexer {
                 '0'..='9' => {
                     let mut number = ch.to_string();
                     while let Some('0'..='9') = chars.peek() {
-                        // unwrap is safe because we peeked
-                        number.push(chars.next().unwrap());
+                        number.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
                     Token::Integer(number.parse::<i32>()?)
                 }
