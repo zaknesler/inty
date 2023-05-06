@@ -1,0 +1,45 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'inty'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=inty",
+                    "--package=inty"
+                ],
+                "filter": {
+                    "name": "inty",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "run",
+                "input/test1"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'inty'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=inty",
+                    "--package=inty"
+                ],
+                "filter": {
+                    "name": "inty",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
