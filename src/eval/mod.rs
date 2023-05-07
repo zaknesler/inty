@@ -26,13 +26,23 @@ impl<'a> Evaluator<'a> {
                 BinOp::Add => self.eval_node(lhs.as_ref())? + self.eval_node(rhs.as_ref())?,
                 BinOp::Sub => self.eval_node(lhs.as_ref())? - self.eval_node(rhs.as_ref())?,
                 BinOp::Mul => self.eval_node(lhs.as_ref())? * self.eval_node(rhs.as_ref())?,
-                BinOp::Div => self.eval_node(lhs.as_ref())? / self.eval_node(rhs.as_ref())?,
+                BinOp::Div => {
+                    let left = self.eval_node(lhs.as_ref())?;
+                    let right = self.eval_node(rhs.as_ref())?;
+
+                    match right {
+                        0 => anyhow::bail!(Error::DivideByZeroError),
+                        _ => left / right,
+                    }
+                }
                 BinOp::Pow => {
                     let base = self.eval_node(lhs.as_ref())?;
                     let pow = self.eval_node(rhs.as_ref())?;
 
                     if pow < 0 {
-                        anyhow::bail!("Power must be non-negative integer");
+                        anyhow::bail!(Error::LogicError {
+                            message: "Power must be non-negative integer".to_string()
+                        });
                     }
 
                     base.pow(pow as u32)

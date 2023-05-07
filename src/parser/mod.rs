@@ -13,14 +13,16 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parse a list of tokens into an AST
+    /// Parse a list of tokens into an AST1
     pub fn parse(&mut self) -> anyhow::Result<Ast> {
         let ast = self.parse_add()?;
 
         // If there are more tokens remaining after a successful parse, they must be invalid.
         // e.g. "2 + 3 4 + 5" will not have parsed "4 + 5"
         if self.has_more_tokens() {
-            anyhow::bail!("Tokens remaining after parsing")
+            anyhow::bail!(Error::InvalidExpressionError {
+                message: "Tokens remaining after parsing".to_string()
+            })
         }
 
         Ok(Ast { root: ast })
@@ -32,7 +34,7 @@ impl<'a> Parser<'a> {
 
         // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
-            let operator = self.clone_current();
+            let operator = self.clone_current()?;
             match operator {
                 Token::Plus | Token::Hyphen => {
                     self.advance();
@@ -58,7 +60,7 @@ impl<'a> Parser<'a> {
 
         // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
-            let operator = self.clone_current();
+            let operator = self.clone_current()?;
             match operator {
                 Token::Star | Token::Divide => {
                     self.advance();
@@ -86,7 +88,7 @@ impl<'a> Parser<'a> {
             return Ok(lhs);
         }
 
-        let operator = self.clone_current();
+        let operator = self.clone_current()?;
         match operator {
             Token::Caret => {
                 self.advance();
@@ -105,7 +107,7 @@ impl<'a> Parser<'a> {
 
     /// Parse a single factor
     fn parse_unary(&mut self) -> anyhow::Result<Expr> {
-        let token = self.clone_current();
+        let token = self.clone_current()?;
         match token {
             Token::Integer(value) => {
                 self.advance();
@@ -128,24 +130,40 @@ impl<'a> Parser<'a> {
                 let expr = self.parse_add()?;
 
                 if !self.has_more_tokens() {
-                    anyhow::bail!("Expected right parenthesis");
+                    anyhow::bail!(Error::SyntaxError {
+                        token: None,
+                        message: "Expected right parenthesis".to_string()
+                    });
                 }
 
                 if let Token::RightParen = self.tokens[self.position] {
                     self.advance();
                     Ok(expr)
                 } else {
-                    anyhow::bail!("Expected right parenthesis");
+                    anyhow::bail!(Error::SyntaxError {
+                        token: None,
+                        message: "Expected right parenthesis".to_string()
+                    });
                 }
             }
 
-            _ => anyhow::bail!("Unexpected token: {}", token),
+            _ => anyhow::bail!(Error::SyntaxError {
+                token: Some(token),
+                message: "Unexpected token".to_string()
+            }),
         }
     }
 
     /// Get a cloned instance of the current token
-    fn clone_current(&self) -> Token {
-        self.tokens[self.position].clone()
+    fn clone_current(&self) -> anyhow::Result<Token> {
+        if !self.has_more_tokens() {
+            anyhow::bail!(Error::SyntaxError {
+                token: Some(self.tokens[self.position - 1].clone()),
+                message: "Unexpected token".to_string()
+            })
+        }
+
+        Ok(self.tokens[self.position].clone())
     }
 
     /// Move onto the next token

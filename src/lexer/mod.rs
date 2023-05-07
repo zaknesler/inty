@@ -31,7 +31,10 @@ impl Lexer {
                 '^' => Token::Caret,
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
-                _ => anyhow::bail!("Unexpected token: {}", ch),
+                _ => anyhow::bail!(Error::TokenParsingError {
+                    character: ch,
+                    message: "Unknown token".to_string()
+                }),
             });
         }
 
@@ -95,7 +98,7 @@ mod tests {
         assert!(tokens.is_err());
         assert_eq!(
             tokens.unwrap_err().to_string(),
-            "Unexpected token: a".to_string()
+            "Token parsing error: Unknown token: a".to_string()
         );
     }
 }
