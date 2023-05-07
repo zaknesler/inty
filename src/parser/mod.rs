@@ -28,7 +28,6 @@ impl<'a> Parser<'a> {
         // binary operation to perform. This ensures left associativity.
         while self.has_more_tokens() {
             let operator = self.clone_current();
-
             match operator {
                 Token::Plus | Token::Hyphen => {
                     self.advance();
@@ -50,27 +49,27 @@ impl<'a> Parser<'a> {
 
     /// Recursively parse a term
     fn parse_mult(&mut self) -> anyhow::Result<Expr> {
-        let lhs = self.parse_pow()?;
+        let mut lhs = self.parse_pow()?;
 
-        if !self.has_more_tokens() {
-            return Ok(lhs);
-        }
+        while self.has_more_tokens() {
+            let operator = self.clone_current();
+            match operator {
+                Token::Star | Token::Divide => {
+                    self.advance();
+                    let rhs = self.parse_pow()?;
 
-        let operator = self.clone_current();
-        match operator {
-            Token::Star | Token::Divide => {
-                self.advance();
-                let rhs = self.parse_mult()?;
+                    lhs = Expr::Binary {
+                        operator: operator.into(),
+                        lhs: Box::new(lhs),
+                        rhs: Box::new(rhs),
+                    };
+                }
 
-                Ok(Expr::Binary {
-                    operator: operator.into(),
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
-                })
+                _ => break,
             }
-
-            _ => Ok(lhs),
         }
+
+        Ok(lhs)
     }
 
     /// Recursively parse an exponentiation
