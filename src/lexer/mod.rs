@@ -24,13 +24,14 @@ impl Lexer {
                     }
                     Token::Integer(number.parse::<i32>()?)
                 }
-                'a'..='z' | 'A'..='Z' => {
+                'a'..='z' => {
                     let mut ident = ch.to_string();
                     while let Some('a'..='z' | 'A'..='Z' | '0'..='9' | '_') = chars.peek() {
                         ident.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
                     Token::Ident(ident)
                 }
+                ';' => Token::Semicolon,
                 '+' => Token::Plus,
                 '-' => Token::Hyphen,
                 '*' => Token::Star,
@@ -99,13 +100,13 @@ mod tests {
 
     #[test]
     fn tokenize_error() {
-        let lexer = Lexer::new("1 + 2 - 3 * 4 / 5 + a".to_string());
+        let lexer = Lexer::new("]".to_string());
         let tokens = lexer.tokenize();
 
         assert!(tokens.is_err());
         assert_eq!(
             tokens.unwrap_err().to_string(),
-            "Token parsing error: Unknown token: a".to_string()
+            "Token parsing error: Unknown token: ]".to_string()
         );
     }
 }

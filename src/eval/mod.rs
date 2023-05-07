@@ -1,17 +1,23 @@
 use crate::core::*;
 
 pub struct Evaluator<'a> {
-    ast: &'a Ast,
+    prog: &'a Program,
 }
 
 impl<'a> Evaluator<'a> {
-    pub fn new(ast: &'a Ast) -> Self {
-        Self { ast }
+    pub fn new(prog: &'a Program) -> Self {
+        Self { prog }
     }
 
-    /// Evaluate an AST to a single value
-    pub fn eval(&self) -> anyhow::Result<i32> {
-        self.eval_node(&self.ast.root)
+    /// Evaluate a program's statements into a list of values
+    pub fn eval(&self) -> anyhow::Result<ProgramOutput> {
+        let mut results = vec![];
+
+        for expr in &self.prog.stmts {
+            results.push(self.eval_node(expr)?);
+        }
+
+        Ok(results)
     }
 
     /// Recursively evaluate a single expression node
@@ -58,33 +64,31 @@ mod tests {
 
     #[test]
     fn single_number() {
-        assert_eq!(
-            100,
-            Evaluator {
-                ast: &Ast {
-                    root: Expr::Integer(100),
-                },
-            }
-            .eval()
-            .unwrap()
-        );
+        let eval = Evaluator {
+            prog: &Program {
+                stmts: vec![Expr::Integer(100)],
+            },
+        }
+        .eval()
+        .unwrap();
+
+        assert_eq!(100, *eval.first().unwrap());
     }
 
     #[test]
     fn basic_addition() {
-        assert_eq!(
-            3,
-            Evaluator {
-                ast: &Ast {
-                    root: Expr::Binary {
-                        operator: BinOp::Add,
-                        lhs: Box::new(Expr::Integer(1)),
-                        rhs: Box::new(Expr::Integer(2)),
-                    },
-                },
-            }
-            .eval()
-            .unwrap()
-        );
+        let eval = Evaluator {
+            prog: &Program {
+                stmts: vec![Expr::Binary {
+                    operator: BinOp::Add,
+                    lhs: Box::new(Expr::Integer(1)),
+                    rhs: Box::new(Expr::Integer(2)),
+                }],
+            },
+        }
+        .eval()
+        .unwrap();
+
+        assert_eq!(3, *eval.first().unwrap());
     }
 }

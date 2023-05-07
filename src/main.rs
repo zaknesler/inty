@@ -6,6 +6,7 @@ mod eval;
 mod lexer;
 mod parser;
 
+use crate::core::*;
 use clap::Parser;
 use std::io::{self, BufRead, Write};
 
@@ -16,12 +17,12 @@ fn main() -> anyhow::Result<()> {
         args::Command::Run { file } => {
             let input = std::fs::read_to_string(file)?;
             let value = process_string(input, args.debug)?;
-            println!("{}", value);
+            println!("{:?}", value);
         }
 
         args::Command::Eval { expr } => {
             let value = process_string(expr, args.debug)?;
-            println!("{}", value);
+            println!("{:?}", value);
         }
 
         args::Command::Repl => loop {
@@ -44,7 +45,7 @@ fn main() -> anyhow::Result<()> {
             }
 
             match process_string(line, args.debug) {
-                Ok(value) => println!("{}", value),
+                Ok(value) => println!("{:?}", value),
                 Err(err) => println!("{}", err),
             }
         },
@@ -53,7 +54,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
+pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutput> {
     // Tokenize input
     let lexer = lexer::Lexer::new(input);
     let tokens = lexer.tokenize()?;
@@ -62,16 +63,16 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
         dbg!(&tokens);
     }
 
-    // Parse tokens into AST
+    // Parse tokens
     let mut parser = parser::Parser::new(&tokens);
-    let ast = parser.parse()?;
+    let prog = parser.parse()?;
 
     if debug {
-        dbg!(&ast);
+        dbg!(&prog);
     }
 
-    // Evaluate the AST
-    let evaluator = eval::Evaluator::new(&ast);
+    // Evaluate the program
+    let evaluator = eval::Evaluator::new(&prog);
     evaluator.eval()
 }
 
@@ -127,8 +128,10 @@ mod tests {
         .into_iter()
         .enumerate()
         .for_each(|(index, (string, val))| {
+            let results = process_string(string.to_string(), false).unwrap();
+
             assert_eq!(
-                process_string(string.to_string(), false).unwrap(),
+                results[0],
                 val,
                 "expression = \"{}\" (line {})",
                 string,

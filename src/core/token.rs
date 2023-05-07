@@ -4,6 +4,7 @@ use std::fmt::{self, Display, Formatter};
 pub enum Token {
     Integer(i32),
     Ident(String),
+    Semicolon,
     Plus,
     Hyphen,
     Star,
@@ -18,6 +19,7 @@ impl Display for Token {
         match self {
             Token::Integer(value) => write!(f, "{}", value),
             Token::Ident(value) => write!(f, "{}", value),
+            Token::Semicolon => write!(f, ";"),
             Token::Plus => write!(f, "+"),
             Token::Hyphen => write!(f, "-"),
             Token::Star => write!(f, "*"),

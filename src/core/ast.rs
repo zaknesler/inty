@@ -1,10 +1,18 @@
 use super::Token;
 
+/// A program is just a list of statements to be evaluated
 #[derive(Debug, PartialEq)]
-pub struct Ast {
-    pub root: Expr,
+pub struct Program {
+    pub stmts: Vec<Stmt>,
 }
 
+/// A single statement
+pub type Stmt = Expr;
+
+/// The type to which a program will evaluate
+pub type ProgramOutput = Vec<i32>;
+
+/// An expression is a group of child expressions that evaluate to a single value
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     /// Single integer value (e.g. 42)
@@ -21,12 +29,14 @@ pub enum Expr {
     },
 }
 
+/// An unary operator (e.g. -[Integer], +[Integer])
 #[derive(Debug, PartialEq)]
 pub enum UnOp {
     Plus,
     Minus,
 }
 
+/// A binary operator (e.g. [Integer] + [Integer])
 #[derive(Debug, PartialEq)]
 pub enum BinOp {
     Add,
