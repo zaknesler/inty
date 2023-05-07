@@ -351,4 +351,27 @@ mod tests {
             .unwrap()
         );
     }
+
+    #[test]
+    fn lone_token_syntax_error() {
+        [
+            Token::Plus,
+            Token::Hyphen,
+            Token::Star,
+            Token::Divide,
+            Token::Caret,
+            Token::LeftParen,
+            Token::RightParen,
+        ]
+        .into_iter()
+        .for_each(|token| {
+            let ast = Parser::new(&vec![token.clone()]).parse();
+
+            assert!(ast.is_err());
+            assert_eq!(
+                ast.unwrap_err().to_string(),
+                format!("Syntax error: Unexpected token: {}", token.to_string())
+            );
+        })
+    }
 }
