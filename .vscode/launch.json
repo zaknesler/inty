@@ -17,8 +17,7 @@
                 }
             },
             "args": [
-                "exec",
-                "input/test1"
+                "repl",
             ],
             "cwd": "${workspaceFolder}"
         },

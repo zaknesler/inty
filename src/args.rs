@@ -13,11 +13,18 @@ pub struct Args {
 
 #[derive(Debug, Parser)]
 pub enum Command {
-    /// Execute source code from a file
-    Exec {
+    /// Run source code from a file
+    Run {
         /// File containing source code
         #[clap(name = "FILE")]
         file: String,
+    },
+
+    /// Evaluate inline expression
+    Eval {
+        /// Inline expression (e.g. "2 + 3")
+        #[clap(name = "EXPRESSION")]
+        expr: String,
     },
 
     /// Start interactive session

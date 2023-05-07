@@ -13,10 +13,14 @@ fn main() -> anyhow::Result<()> {
     let args = args::Args::parse();
 
     match args.command {
-        args::Command::Exec { file } => {
+        args::Command::Run { file } => {
             let input = std::fs::read_to_string(file)?;
             let value = process_string(input, args.debug)?;
+            println!("{}", value);
+        }
 
+        args::Command::Eval { expr } => {
+            let value = process_string(expr, args.debug)?;
             println!("{}", value);
         }
 
