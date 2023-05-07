@@ -54,6 +54,10 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<i32> {
     let lexer = lexer::Lexer::new(input);
     let tokens = lexer.tokenize()?;
 
+    if debug {
+        dbg!(&tokens);
+    }
+
     // Parse tokens into AST
     let mut parser = parser::Parser::new(&tokens);
     let ast = parser.parse()?;
@@ -100,6 +104,7 @@ mod tests {
             ("10 / 2", 5),
             ("10 / 5", 2),
             ("10 * 10 / 5", 20),
+            ("1 * 4 * 5 / 10 / 2 * 10", 10),
             ("3 ^ 0", 1),
             ("3 ^ 1", 3),
             ("3 ^ 2", 9),

@@ -15,17 +15,22 @@ impl<'a> Parser<'a> {
 
     /// Parse a list of tokens into an AST
     pub fn parse(&mut self) -> anyhow::Result<Ast> {
-        Ok(Ast {
-            root: self.parse_add()?,
-        })
+        let ast = self.parse_add()?;
+
+        // If there are more tokens remaining after a successful parse, they must be invalid.
+        // e.g. "2 + 3 4 + 5" will not have parsed "4 + 5"
+        if self.has_more_tokens() {
+            anyhow::bail!("Tokens remaining after parsing")
+        }
+
+        Ok(Ast { root: ast })
     }
 
     /// Recursively parse an expression
     fn parse_add(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_mult()?;
 
-        // Continue expanding the left-hand side as long as there is another
-        // binary operation to perform. This ensures left associativity.
+        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current();
             match operator {
@@ -51,6 +56,7 @@ impl<'a> Parser<'a> {
     fn parse_mult(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_pow()?;
 
+        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current();
             match operator {
@@ -246,7 +252,11 @@ mod tests {
                     rhs: Box::new(Expr::Binary {
                         operator: BinOp::Pow,
                         lhs: Box::new(Expr::Integer(3)),
-                        rhs: Box::new(Expr::Integer(4)),
+                        rhs: Box::new(Expr::Binary {
+                            operator: BinOp::Pow,
+                            lhs: Box::new(Expr::Integer(4)),
+                            rhs: Box::new(Expr::Integer(5)),
+                        }),
                     }),
                 }
             },
@@ -256,6 +266,8 @@ mod tests {
                 Token::Integer(3),
                 Token::Caret,
                 Token::Integer(4),
+                Token::Caret,
+                Token::Integer(5),
             ])
             .parse()
             .unwrap()
