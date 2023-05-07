@@ -24,6 +24,13 @@ impl Lexer {
                     }
                     Token::Integer(number.parse::<i32>()?)
                 }
+                'a'..='z' | 'A'..='Z' => {
+                    let mut ident = ch.to_string();
+                    while let Some('a'..='z' | 'A'..='Z' | '0'..='9' | '_') = chars.peek() {
+                        ident.push(chars.next().expect("we are peeking ahead so this is safe"));
+                    }
+                    Token::Ident(ident)
+                }
                 '+' => Token::Plus,
                 '-' => Token::Hyphen,
                 '*' => Token::Star,
