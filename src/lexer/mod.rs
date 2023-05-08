@@ -29,7 +29,11 @@ impl Lexer {
                     while let Some('a'..='z' | 'A'..='Z' | '0'..='9' | '_') = chars.peek() {
                         ident.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
-                    Token::Ident(ident)
+
+                    match map_keyword(ident.as_ref()) {
+                        Some(keyword) => keyword,
+                        None => Token::Ident(ident),
+                    }
                 }
                 ';' => Token::Semicolon,
                 '+' => Token::Plus,
