@@ -35,9 +35,12 @@ impl Display for Token {
     }
 }
 
-pub fn map_keyword(text: &str) -> Option<Token> {
-    match text {
-        "let" => Some(Token::Let),
-        _ => None,
+impl Token {
+    /// Attempt to map a reserved keyword to its token
+    pub fn map_keyword(text: &str) -> Option<Self> {
+        match text {
+            "let" => Some(Token::Let),
+            _ => None,
+        }
     }
 }

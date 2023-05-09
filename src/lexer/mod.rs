@@ -30,7 +30,7 @@ impl Lexer {
                         ident.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
 
-                    match map_keyword(ident.as_ref()) {
+                    match Token::map_keyword(ident.as_ref()) {
                         Some(keyword) => keyword,
                         None => Token::Ident(ident),
                     }
