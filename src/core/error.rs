@@ -18,6 +18,9 @@ pub enum Error {
     InvalidExpressionError {
         message: String,
     },
+    UnknownIdentifier {
+        ident: String,
+    },
 }
 
 impl Display for Error {
@@ -34,6 +37,9 @@ impl Display for Error {
             Error::DivideByZeroError => write!(f, "Error: Cannot divide by zero"),
             Error::InvalidExpressionError { message } => {
                 write!(f, "Invalid expression: {}", message)
+            }
+            Error::UnknownIdentifier { ident } => {
+                write!(f, "Unknown identifier: {}", ident)
             }
         }
     }

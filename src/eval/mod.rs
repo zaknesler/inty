@@ -1,38 +1,38 @@
+mod env;
+
+use self::env::Environment;
 use crate::core::*;
-use std::collections::HashMap;
 
 pub struct Evaluator {
-    stmts: Vec<Stmt>,
-    environment: Box<HashMap<String, i32>>,
+    environment: Environment,
 }
 
 impl Evaluator {
-    pub fn new(stmts: Vec<Stmt>) -> Self {
+    pub fn new() -> Self {
         Self {
-            stmts,
-            environment: Box::new(HashMap::new()),
+            environment: Environment::new(),
         }
     }
 
-    pub fn add_statment(&mut self, stmt: Stmt) {
-        self.stmts.push(stmt);
-    }
-
     /// Evaluate a program's statements into a list of values
-    pub fn eval(&mut self) -> anyhow::Result<ProgramOutput> {
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> anyhow::Result<ProgramOutput> {
         let mut results = vec![];
 
-        for stmt in &self.stmts {
+        for stmt in &stmts {
             results.push(self.eval_stmt(stmt)?);
         }
 
         Ok(results)
     }
 
-    fn eval_stmt(&self, stmt: &Stmt) -> anyhow::Result<i32> {
+    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<i32> {
         match stmt {
             Stmt::Expr(expr) => self.eval_expr(&expr),
-            Stmt::Let { .. } => todo!(),
+            Stmt::Let { ident, expr } => {
+                self.environment.put(ident.clone(), self.eval_expr(expr)?);
+
+                Ok(-1) // @todo use core::Value enum so a None value can be returned (or maybe just Option for now?)
+            }
         }
     }
 
@@ -40,7 +40,12 @@ impl Evaluator {
     fn eval_expr(&self, expr: &Expr) -> anyhow::Result<i32> {
         Ok(match expr.clone() {
             Expr::Integer(val) => *val,
-            Expr::Ident(_name) => todo!(),
+            Expr::Ident(ident) => match self.environment.get(ident.clone()) {
+                Some(val) => *val,
+                None => anyhow::bail!(Error::UnknownIdentifier {
+                    ident: ident.clone()
+                }),
+            },
             Expr::Unary { operator, value } => match operator {
                 UnOp::Minus => -1 * self.eval_expr(value)?,
                 UnOp::Plus => self.eval_expr(value)?,
@@ -77,29 +82,59 @@ impl Evaluator {
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
-
     use super::*;
+    use std::rc::Rc;
 
     #[test]
     fn single_number() {
-        let eval = Evaluator::new(vec![Stmt::Expr(Expr::Integer(100))])
-            .eval()
+        let value = Evaluator::new()
+            .eval(vec![Stmt::Expr(Expr::Integer(100))])
             .unwrap();
 
-        assert_eq!(100, *eval.first().unwrap());
+        assert_eq!(100, *value.first().unwrap());
     }
 
     #[test]
     fn basic_addition() {
-        let eval = Evaluator::new(vec![Stmt::Expr(Expr::Binary {
-            operator: BinOp::Add,
-            lhs: Rc::new(Expr::Integer(1)),
-            rhs: Rc::new(Expr::Integer(2)),
-        })])
-        .eval()
-        .unwrap();
+        let value = Evaluator::new()
+            .eval(vec![Stmt::Expr(Expr::Binary {
+                operator: BinOp::Add,
+                lhs: Rc::new(Expr::Integer(1)),
+                rhs: Rc::new(Expr::Integer(2)),
+            })])
+            .unwrap();
 
-        assert_eq!(3, *eval.first().unwrap());
+        assert_eq!(3, *value.first().unwrap());
+    }
+
+    #[test]
+    fn variable_assignment() {
+        let mut evaler = Evaluator::new();
+
+        evaler
+            .eval(vec![Stmt::Let {
+                ident: "foo".into(),
+                expr: Expr::Integer(42),
+            }])
+            .unwrap();
+
+        assert_eq!(42, *evaler.environment.get("foo".into()).unwrap());
+    }
+
+    #[test]
+    fn variable_assignment_and_retrieval() {
+        let mut evaler = Evaluator::new();
+
+        let value = evaler
+            .eval(vec![
+                Stmt::Let {
+                    ident: "foo".into(),
+                    expr: Expr::Integer(42),
+                },
+                Stmt::Expr(Expr::Ident("foo".to_string())),
+            ])
+            .unwrap();
+
+        assert_eq!(42, *value.last().unwrap());
     }
 }

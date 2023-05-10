@@ -1,19 +1,13 @@
 use crate::core::*;
 
-pub struct Lexer {
-    pub input: String,
-}
+pub struct Lexer {}
 
 impl Lexer {
-    pub fn new(input: String) -> Self {
-        Self { input }
-    }
-
     /// Parse a string into a vector of valid tokens
-    pub fn tokenize(&self) -> anyhow::Result<Vec<Token>> {
+    pub fn tokenize(input: String) -> anyhow::Result<Vec<Token>> {
         let mut tokens = vec![];
 
-        let mut chars = self.input.chars().peekable();
+        let mut chars = input.chars().peekable();
         while let Some(ch) = chars.next() {
             tokens.push(match ch {
                 ' ' | '\t' | '\r' | '\n' => continue,
@@ -60,8 +54,7 @@ mod tests {
 
     #[test]
     fn tokenize() {
-        let lexer = Lexer::new("1 + 2 - 3 * 4 / 5".to_string());
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize("1 + 2 - 3 * 4 / 5".into()).unwrap();
 
         assert_eq!(
             tokens,
@@ -81,8 +74,7 @@ mod tests {
 
     #[test]
     fn tokenize_paren() {
-        let lexer = Lexer::new("1 + (2 - 3) * 4 / 5".to_string());
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize("1 + (2 - 3) * 4 / 5".into()).unwrap();
 
         assert_eq!(
             tokens,
@@ -104,8 +96,7 @@ mod tests {
 
     #[test]
     fn tokenize_error() {
-        let lexer = Lexer::new("]".to_string());
-        let tokens = lexer.tokenize();
+        let tokens = Lexer::tokenize("]".into());
 
         assert!(tokens.is_err());
         assert_eq!(

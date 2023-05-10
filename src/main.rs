@@ -8,6 +8,7 @@ mod parser;
 
 use crate::core::*;
 use clap::Parser;
+use lexer::Lexer;
 use std::io::{self, BufRead, Write};
 
 fn main() -> anyhow::Result<()> {
@@ -25,6 +26,7 @@ fn main() -> anyhow::Result<()> {
             println!("{:?}", value);
         }
 
+        // @todo change this so that a single evaluator instance is created.
         args::Command::Repl => loop {
             print!("> ");
             io::stdout().flush().expect("Could not flush output");
@@ -56,8 +58,7 @@ fn main() -> anyhow::Result<()> {
 
 pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutput> {
     // Tokenize input
-    let lexer = lexer::Lexer::new(input);
-    let tokens = lexer.tokenize()?;
+    let tokens = Lexer::tokenize(input)?;
 
     if debug {
         dbg!(&tokens);
@@ -72,8 +73,7 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutpu
     }
 
     // Evaluate the parsed statements
-    let mut evaluator = eval::Evaluator::new(stmts);
-    evaluator.eval()
+    eval::Evaluator::new().eval(stmts)
 }
 
 #[cfg(test)]

@@ -9,19 +9,20 @@ pub type ProgramOutput = Vec<i32>;
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     /// A let statement (e.g. `let x = 10;`)
-    Let { identifier: String, value: Expr },
+    Let { ident: String, expr: Expr },
 
     /// A single expression
     Expr(Expr),
 }
 
-// #[derive(Debug, PartialEq)]
-// pub enum Value {
-//     Integer(i32),
-//     Float(u32),
-//     Str(String),
-//     Bool(bool),
-// }
+#[derive(Debug, PartialEq)]
+pub enum Value {
+    Integer(i32),
+    Float(u32),
+    Str(String),
+    Bool(bool),
+    None,
+}
 
 /// An expression is a group of child expressions that evaluate to a single value
 #[derive(Debug, PartialEq)]

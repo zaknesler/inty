@@ -132,8 +132,12 @@ impl<'a> Parser<'a> {
         match token {
             Token::Integer(value) => {
                 self.advance();
-
                 Ok(Expr::Integer(value))
+            }
+
+            Token::Ident(ident) => {
+                self.advance();
+                Ok(Expr::Ident(ident))
             }
 
             Token::Hyphen | Token::Plus => {
