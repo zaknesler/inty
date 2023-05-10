@@ -36,10 +36,14 @@ fn main() -> anyhow::Result<()> {
 
             loop {
                 match rl.readline("> ") {
-                    Ok(line) => match process_string(&mut eval, line, args.debug) {
-                        Ok(values) => print_output(&values),
-                        Err(err) => println!("{}", err),
-                    },
+                    Ok(line) => {
+                        rl.add_history_entry(line.as_str())?;
+
+                        match process_string(&mut eval, line, args.debug) {
+                            Ok(values) => print_output(&values),
+                            Err(err) => println!("{}", err),
+                        }
+                    }
                     Err(ReadlineError::Eof | ReadlineError::Interrupted) => {
                         println!("inty session ended");
                         break;
