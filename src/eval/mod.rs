@@ -1,16 +1,16 @@
 use crate::core::*;
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 pub struct Evaluator<'a> {
     prog: &'a Program,
-    environment: Rc<HashMap<String, i32>>,
+    environment: Box<HashMap<String, i32>>,
 }
 
 impl<'a> Evaluator<'a> {
     pub fn new(prog: &'a Program) -> Self {
         Self {
             prog,
-            environment: Rc::new(HashMap::new()),
+            environment: Box::new(HashMap::new()),
         }
     }
 
@@ -73,6 +73,8 @@ impl<'a> Evaluator<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use super::*;
 
     #[test]
@@ -91,8 +93,8 @@ mod tests {
         let eval = Evaluator::new(&Program {
             stmts: vec![Stmt::Expr(Expr::Binary {
                 operator: BinOp::Add,
-                lhs: Box::new(Expr::Integer(1)),
-                rhs: Box::new(Expr::Integer(2)),
+                lhs: Rc::new(Expr::Integer(1)),
+                rhs: Rc::new(Expr::Integer(2)),
             })],
         })
         .eval()

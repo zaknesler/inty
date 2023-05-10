@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::core::*;
 
 pub struct Parser<'a> {
@@ -61,8 +63,8 @@ impl<'a> Parser<'a> {
 
                     lhs = Expr::Binary {
                         operator: operator.into(),
-                        lhs: Box::new(lhs),
-                        rhs: Box::new(rhs),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
                     };
                 }
 
@@ -87,8 +89,8 @@ impl<'a> Parser<'a> {
 
                     lhs = Expr::Binary {
                         operator: operator.into(),
-                        lhs: Box::new(lhs),
-                        rhs: Box::new(rhs),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
                     };
                 }
 
@@ -115,8 +117,8 @@ impl<'a> Parser<'a> {
 
                 Ok(Expr::Binary {
                     operator: operator.into(),
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
+                    lhs: Rc::new(lhs),
+                    rhs: Rc::new(rhs),
                 })
             }
 
@@ -140,7 +142,7 @@ impl<'a> Parser<'a> {
 
                 Ok(Expr::Unary {
                     operator: UnOp::from(token),
-                    value: Box::new(expr),
+                    value: Rc::new(expr),
                 })
             }
 
@@ -216,7 +218,7 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Unary {
                     operator: UnOp::Plus,
-                    value: Box::new(Expr::Integer(1))
+                    value: Rc::new(Expr::Integer(1))
                 })]
             },
             Parser::new(&vec![Token::Plus, Token::Integer(1)])
@@ -228,7 +230,7 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Unary {
                     operator: UnOp::Minus,
-                    value: Box::new(Expr::Integer(1))
+                    value: Rc::new(Expr::Integer(1))
                 })]
             },
             Parser::new(&vec![Token::Hyphen, Token::Integer(1)])
@@ -243,8 +245,8 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Add,
-                    lhs: Box::new(Expr::Integer(1)),
-                    rhs: Box::new(Expr::Integer(2))
+                    lhs: Rc::new(Expr::Integer(1)),
+                    rhs: Rc::new(Expr::Integer(2))
                 })]
             },
             Parser::new(&vec![Token::Integer(1), Token::Plus, Token::Integer(2)])
@@ -259,12 +261,12 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Mul,
-                    lhs: Box::new(Expr::Binary {
+                    lhs: Rc::new(Expr::Binary {
                         operator: BinOp::Mul,
-                        lhs: Box::new(Expr::Integer(2)),
-                        rhs: Box::new(Expr::Integer(3)),
+                        lhs: Rc::new(Expr::Integer(2)),
+                        rhs: Rc::new(Expr::Integer(3)),
                     }),
-                    rhs: Box::new(Expr::Integer(4)),
+                    rhs: Rc::new(Expr::Integer(4)),
                 })]
             },
             Parser::new(&vec![
@@ -285,14 +287,14 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Pow,
-                    lhs: Box::new(Expr::Integer(2)),
-                    rhs: Box::new(Expr::Binary {
+                    lhs: Rc::new(Expr::Integer(2)),
+                    rhs: Rc::new(Expr::Binary {
                         operator: BinOp::Pow,
-                        lhs: Box::new(Expr::Integer(3)),
-                        rhs: Box::new(Expr::Binary {
+                        lhs: Rc::new(Expr::Integer(3)),
+                        rhs: Rc::new(Expr::Binary {
                             operator: BinOp::Pow,
-                            lhs: Box::new(Expr::Integer(4)),
-                            rhs: Box::new(Expr::Integer(5)),
+                            lhs: Rc::new(Expr::Integer(4)),
+                            rhs: Rc::new(Expr::Integer(5)),
                         }),
                     }),
                 })]
@@ -317,14 +319,14 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Add,
-                    lhs: Box::new(Expr::Integer(1)),
-                    rhs: Box::new(Expr::Binary {
+                    lhs: Rc::new(Expr::Integer(1)),
+                    rhs: Rc::new(Expr::Binary {
                         operator: BinOp::Mul,
-                        lhs: Box::new(Expr::Integer(2)),
-                        rhs: Box::new(Expr::Binary {
+                        lhs: Rc::new(Expr::Integer(2)),
+                        rhs: Rc::new(Expr::Binary {
                             operator: BinOp::Pow,
-                            lhs: Box::new(Expr::Integer(3)),
-                            rhs: Box::new(Expr::Integer(4)),
+                            lhs: Rc::new(Expr::Integer(3)),
+                            rhs: Rc::new(Expr::Integer(4)),
                         }),
                     }),
                 })]
@@ -349,12 +351,12 @@ mod tests {
             Program {
                 stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Mul,
-                    lhs: Box::new(Expr::Binary {
+                    lhs: Rc::new(Expr::Binary {
                         operator: BinOp::Add,
-                        lhs: Box::new(Expr::Integer(1)),
-                        rhs: Box::new(Expr::Integer(2)),
+                        lhs: Rc::new(Expr::Integer(1)),
+                        rhs: Rc::new(Expr::Integer(2)),
                     }),
-                    rhs: Box::new(Expr::Integer(3)),
+                    rhs: Rc::new(Expr::Integer(3)),
                 })]
             },
             Parser::new(&vec![

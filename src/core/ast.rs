@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::Token;
 
 /// A program is just a list of statements to be evaluated
@@ -37,13 +39,13 @@ pub enum Expr {
     Ident(String),
 
     /// Unary operation (e.g. +1, -2)
-    Unary { operator: UnOp, value: Box<Expr> },
+    Unary { operator: UnOp, value: Rc<Expr> },
 
     /// Binary operation (e.g. 3 * 4)
     Binary {
         operator: BinOp,
-        lhs: Box<Expr>,
-        rhs: Box<Expr>,
+        lhs: Rc<Expr>,
+        rhs: Rc<Expr>,
     },
 }
 
