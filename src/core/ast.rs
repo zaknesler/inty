@@ -9,15 +9,13 @@ pub struct Program {
 /// The type to which a program will evaluate
 pub type ProgramOutput = Vec<i32>;
 
-/// A statement
+/// A statement can be an operation upon an expression, or just a single expression
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     /// A let statement (e.g. `let x = 10;`)
-    Let {
-        identifier: String,
-        value: Expr,
-    },
+    Let { identifier: String, value: Expr },
 
+    /// A single expression
     Expr(Expr),
 }
 
