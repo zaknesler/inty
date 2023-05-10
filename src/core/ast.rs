@@ -2,12 +2,6 @@ use std::rc::Rc;
 
 use super::Token;
 
-/// A program is just a list of statements to be evaluated
-#[derive(Debug, PartialEq)]
-pub struct Program {
-    pub stmts: Vec<Stmt>,
-}
-
 /// The type to which a program will evaluate
 pub type ProgramOutput = Vec<i32>;
 

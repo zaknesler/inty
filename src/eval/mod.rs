@@ -1,24 +1,28 @@
 use crate::core::*;
 use std::collections::HashMap;
 
-pub struct Evaluator<'a> {
-    prog: &'a Program,
+pub struct Evaluator {
+    stmts: Vec<Stmt>,
     environment: Box<HashMap<String, i32>>,
 }
 
-impl<'a> Evaluator<'a> {
-    pub fn new(prog: &'a Program) -> Self {
+impl Evaluator {
+    pub fn new(stmts: Vec<Stmt>) -> Self {
         Self {
-            prog,
+            stmts,
             environment: Box::new(HashMap::new()),
         }
     }
 
+    pub fn add_statment(&mut self, stmt: Stmt) {
+        self.stmts.push(stmt);
+    }
+
     /// Evaluate a program's statements into a list of values
-    pub fn eval(&self) -> anyhow::Result<ProgramOutput> {
+    pub fn eval(&mut self) -> anyhow::Result<ProgramOutput> {
         let mut results = vec![];
 
-        for stmt in &self.prog.stmts {
+        for stmt in &self.stmts {
             results.push(self.eval_stmt(stmt)?);
         }
 
@@ -79,24 +83,20 @@ mod tests {
 
     #[test]
     fn single_number() {
-        let eval = Evaluator::new(&Program {
-            stmts: vec![Stmt::Expr(Expr::Integer(100))],
-        })
-        .eval()
-        .unwrap();
+        let eval = Evaluator::new(vec![Stmt::Expr(Expr::Integer(100))])
+            .eval()
+            .unwrap();
 
         assert_eq!(100, *eval.first().unwrap());
     }
 
     #[test]
     fn basic_addition() {
-        let eval = Evaluator::new(&Program {
-            stmts: vec![Stmt::Expr(Expr::Binary {
-                operator: BinOp::Add,
-                lhs: Rc::new(Expr::Integer(1)),
-                rhs: Rc::new(Expr::Integer(2)),
-            })],
-        })
+        let eval = Evaluator::new(vec![Stmt::Expr(Expr::Binary {
+            operator: BinOp::Add,
+            lhs: Rc::new(Expr::Integer(1)),
+            rhs: Rc::new(Expr::Integer(2)),
+        })])
         .eval()
         .unwrap();
 

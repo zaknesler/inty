@@ -65,14 +65,14 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutpu
 
     // Parse tokens
     let mut parser = parser::Parser::new(&tokens);
-    let prog = parser.parse()?;
+    let stmts = parser.parse()?;
 
     if debug {
-        dbg!(&prog);
+        dbg!(&stmts);
     }
 
-    // Evaluate the program
-    let evaluator = eval::Evaluator::new(&prog);
+    // Evaluate the parsed statements
+    let mut evaluator = eval::Evaluator::new(stmts);
     evaluator.eval()
 }
 
