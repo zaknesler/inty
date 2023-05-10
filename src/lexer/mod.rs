@@ -37,6 +37,7 @@ impl Lexer {
                 '^' => Token::Caret,
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
+                '=' => Token::Equal,
                 _ => anyhow::bail!(Error::TokenParsingError {
                     character: ch,
                     message: "Unknown token".to_string()

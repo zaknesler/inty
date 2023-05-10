@@ -11,6 +11,10 @@ pub enum Error {
         character: char,
         message: String,
     },
+    ExpectedTokenError {
+        expected: Token,
+        found: Token,
+    },
     LogicError {
         message: String,
     },
@@ -32,6 +36,9 @@ impl Display for Error {
             },
             Error::TokenParsingError { character, message } => {
                 write!(f, "Token parsing error: {}: {}", message, character)
+            }
+            Error::ExpectedTokenError { expected, found } => {
+                write!(f, "Expected {} but found {}", expected, found)
             }
             Error::LogicError { message } => write!(f, "Logic error: {}", message),
             Error::DivideByZeroError => write!(f, "Error: Cannot divide by zero"),

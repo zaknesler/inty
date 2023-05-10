@@ -44,13 +44,31 @@ impl<'a> Parser<'a> {
 
     /// Parse a single statement
     fn parse_statement(&mut self) -> anyhow::Result<Stmt> {
-        let expr = self.parse_add()?;
+        let token = self.clone_current()?;
 
-        Ok(Stmt::Expr(expr))
+        Ok(match token {
+            Token::Let => {
+                self.advance();
+                if let Token::Ident(ident) = self.clone_current()? {
+                    self.advance();
+                    self.consume(Token::Equal)?;
+
+                    Stmt::Let {
+                        ident,
+                        expr: self.parse_expr()?,
+                    }
+                } else {
+                    anyhow::bail!("Expected identifier")
+                }
+            }
+
+            // A statement can be a single expression
+            _ => Stmt::Expr(self.parse_expr()?),
+        })
     }
 
     /// Recursively parse an expression
-    fn parse_add(&mut self) -> anyhow::Result<Expr> {
+    fn parse_expr(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_mult()?;
 
         // Ensure left-associativity by expanding LHS as long as there is another operation
@@ -152,7 +170,7 @@ impl<'a> Parser<'a> {
 
             Token::LeftParen => {
                 self.advance();
-                let expr = self.parse_add()?;
+                let expr = self.parse_expr()?;
 
                 if !self.has_more_tokens() {
                     anyhow::bail!(Error::SyntaxError {
@@ -199,6 +217,18 @@ impl<'a> Parser<'a> {
     /// Are there still tokens remaining?
     fn has_more_tokens(&self) -> bool {
         self.position < self.tokens.len()
+    }
+
+    /// Match the current token to the expected token, error otherwise
+    fn consume(&mut self, expected: Token) -> anyhow::Result<Token> {
+        let found = self.clone_current()?;
+
+        if expected == found {
+            self.advance();
+            return Ok(found);
+        }
+
+        anyhow::bail!(Error::ExpectedTokenError { expected, found })
     }
 }
 
