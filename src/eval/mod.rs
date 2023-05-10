@@ -4,13 +4,13 @@ use self::env::Environment;
 use crate::core::*;
 
 pub struct Evaluator {
-    environment: Environment,
+    env: Environment,
 }
 
 impl Evaluator {
     pub fn new() -> Self {
         Self {
-            environment: Environment::new(),
+            env: Environment::new(),
         }
     }
 
@@ -29,7 +29,7 @@ impl Evaluator {
         match stmt {
             Stmt::Expr(expr) => self.eval_expr(&expr),
             Stmt::Let { ident, expr } => {
-                self.environment.put(ident.clone(), self.eval_expr(expr)?);
+                self.env.put(ident.clone(), self.eval_expr(expr)?);
 
                 Ok(-1) // @todo use core::Value enum so a None value can be returned (or maybe just Option for now?)
             }
@@ -40,7 +40,7 @@ impl Evaluator {
     fn eval_expr(&self, expr: &Expr) -> anyhow::Result<i32> {
         Ok(match expr.clone() {
             Expr::Integer(val) => *val,
-            Expr::Ident(ident) => match self.environment.get(ident.clone()) {
+            Expr::Ident(ident) => match self.env.get(ident.clone()) {
                 Some(val) => *val,
                 None => anyhow::bail!(Error::UnknownIdentifier {
                     ident: ident.clone()
@@ -118,7 +118,7 @@ mod tests {
             }])
             .unwrap();
 
-        assert_eq!(42, *evaler.environment.get("foo".into()).unwrap());
+        assert_eq!(42, *evaler.env.get("foo".into()).unwrap());
     }
 
     #[test]
