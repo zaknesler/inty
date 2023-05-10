@@ -25,15 +25,15 @@ impl Evaluator {
         Ok(results)
     }
 
-    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<i32> {
-        match stmt {
-            Stmt::Expr(expr) => self.eval_expr(&expr),
+    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Value> {
+        Ok(match stmt {
+            Stmt::Expr(expr) => Value::Integer(self.eval_expr(&expr)?),
             Stmt::Let { ident, expr } => {
                 self.env.put(ident.clone(), self.eval_expr(expr)?);
 
-                Ok(-1) // @todo use core::Value enum so a None value can be returned (or maybe just Option for now?)
+                Value::None
             }
-        }
+        })
     }
 
     /// Recursively evaluate a single statement
@@ -91,7 +91,7 @@ mod tests {
             .eval(vec![Stmt::Expr(Expr::Integer(100))])
             .unwrap();
 
-        assert_eq!(100, *value.first().unwrap());
+        assert_eq!(Value::Integer(100), *value.first().unwrap());
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod tests {
             })])
             .unwrap();
 
-        assert_eq!(3, *value.first().unwrap());
+        assert_eq!(Value::Integer(3), *value.first().unwrap());
     }
 
     #[test]
@@ -135,6 +135,6 @@ mod tests {
             ])
             .unwrap();
 
-        assert_eq!(42, *value.last().unwrap());
+        assert_eq!(Value::Integer(42), *value.last().unwrap());
     }
 }

@@ -1,9 +1,9 @@
-use std::rc::Rc;
+use std::{fmt::Display, rc::Rc};
 
 use super::Token;
 
 /// The type to which a program will evaluate
-pub type ProgramOutput = Vec<i32>;
+pub type ProgramOutput = Vec<Value>;
 
 /// A statement can be an operation upon an expression, or just a single expression
 #[derive(Debug, PartialEq)]
@@ -17,11 +17,11 @@ pub enum Stmt {
 
 #[derive(Debug, PartialEq)]
 pub enum Value {
-    Integer(i32),
-    Float(u32),
-    Str(String),
-    Bool(bool),
     None,
+    Integer(i32),
+    // Float(u32),
+    // Str(String),
+    // Bool(bool),
 }
 
 /// An expression is a group of child expressions that evaluate to a single value
@@ -80,6 +80,15 @@ impl From<Token> for BinOp {
             Token::Divide => BinOp::Div,
             Token::Caret => BinOp::Pow,
             _ => panic!("Invalid token"),
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Integer(val) => write!(f, "{}", val),
+            Value::None => Ok(()),
         }
     }
 }

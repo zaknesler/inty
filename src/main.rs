@@ -7,8 +7,10 @@ mod lexer;
 mod parser;
 
 use crate::core::*;
-use clap::Parser;
+use clap::Parser as _;
+use eval::Evaluator;
 use lexer::Lexer;
+use parser::Parser;
 use std::io::{self, BufRead, Write};
 
 fn main() -> anyhow::Result<()> {
@@ -16,47 +18,56 @@ fn main() -> anyhow::Result<()> {
 
     match args.command {
         args::Command::Run { file } => {
+            let mut eval = Evaluator::new();
             let input = std::fs::read_to_string(file)?;
-            let value = process_string(input, args.debug)?;
-            println!("{:?}", value);
+            let values = process_string(&mut eval, input, args.debug)?;
+            print_output(&values);
         }
 
         args::Command::Eval { expr } => {
-            let value = process_string(expr, args.debug)?;
-            println!("{:?}", value);
+            let mut eval = Evaluator::new();
+            let values = process_string(&mut eval, expr, args.debug)?;
+            print_output(&values);
         }
 
-        // @todo change this so that a single evaluator instance is created.
-        args::Command::Repl => loop {
-            print!("> ");
-            io::stdout().flush().expect("Could not flush output");
+        args::Command::Repl => {
+            let mut eval = Evaluator::new();
 
-            let mut line = String::new();
-            let stream = io::stdin();
-            let bytes = stream
-                .lock()
-                .read_line(&mut line)
-                .expect("Could not read line");
+            loop {
+                print!("> ");
+                io::stdout().flush().expect("Could not flush output");
 
-            if bytes == 0 {
-                break;
+                let mut line = String::new();
+                let stream = io::stdin();
+                let bytes = stream
+                    .lock()
+                    .read_line(&mut line)
+                    .expect("Could not read line");
+
+                if bytes == 0 {
+                    break;
+                }
+
+                if line.trim().is_empty() {
+                    continue;
+                }
+
+                match process_string(&mut eval, line, args.debug) {
+                    Ok(values) => print_output(&values),
+                    Err(err) => println!("{}", err),
+                }
             }
-
-            if line.trim().is_empty() {
-                continue;
-            }
-
-            match process_string(line, args.debug) {
-                Ok(value) => println!("{:?}", value),
-                Err(err) => println!("{}", err),
-            }
-        },
+        }
     }
 
     Ok(())
 }
 
-pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutput> {
+fn process_string(
+    eval: &mut Evaluator,
+    input: String,
+    debug: bool,
+) -> anyhow::Result<ProgramOutput> {
     // Tokenize input
     let tokens = Lexer::tokenize(input)?;
 
@@ -64,21 +75,28 @@ pub fn process_string(input: String, debug: bool) -> anyhow::Result<ProgramOutpu
         dbg!(&tokens);
     }
 
-    // Parse tokens
-    let mut parser = parser::Parser::new(&tokens);
-    let stmts = parser.parse()?;
+    // Parse tokens into a list of statements
+    let stmts = Parser::new(&tokens).parse()?;
 
     if debug {
         dbg!(&stmts);
     }
 
     // Evaluate the parsed statements
-    eval::Evaluator::new().eval(stmts)
+    eval.eval(stmts)
+}
+
+fn print_output(values: &Vec<Value>) {
+    values.iter().for_each(|v| {
+        if *v != Value::None {
+            println!("{}", v);
+        }
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::process_string;
+    use super::*;
 
     #[test]
     fn expression_evaluation() {
@@ -128,11 +146,12 @@ mod tests {
         .into_iter()
         .enumerate()
         .for_each(|(index, (string, val))| {
-            let results = process_string(string.to_string(), false).unwrap();
+            let mut eval = Evaluator::new();
+            let results = process_string(&mut eval, string.to_string(), false).unwrap();
 
             assert_eq!(
                 results[0],
-                val,
+                Value::Integer(val),
                 "expression = \"{}\" (line {})",
                 string,
                 start + (index as u32)
