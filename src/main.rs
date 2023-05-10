@@ -155,4 +155,11 @@ mod tests {
             );
         })
     }
+
+    #[test]
+    fn let_statement() {
+        let mut eval = Evaluator::new();
+        let values = process_string(&mut eval, "let x = 42; x".into(), false).unwrap();
+        assert_eq!(vec![Value::None, Value::Integer(42)], values);
+    }
 }
