@@ -9,13 +9,25 @@ pub struct Program {
 /// The type to which a program will evaluate
 pub type ProgramOutput = Vec<i32>;
 
+/// A statement
 #[derive(Debug, PartialEq)]
-pub enum Value {
-    Integer(i32),
-    Float(u32),
-    Str(String),
-    Bool(bool),
+pub enum Stmt {
+    /// A let statement (e.g. `let x = 10;`)
+    Let {
+        identifier: String,
+        value: Expr,
+    },
+
+    Expr(Expr),
 }
+
+// #[derive(Debug, PartialEq)]
+// pub enum Value {
+//     Integer(i32),
+//     Float(u32),
+//     Str(String),
+//     Bool(bool),
+// }
 
 /// An expression is a group of child expressions that evaluate to a single value
 #[derive(Debug, PartialEq)]
@@ -35,18 +47,6 @@ pub enum Expr {
         lhs: Box<Expr>,
         rhs: Box<Expr>,
     },
-}
-
-/// A statement
-#[derive(Debug, PartialEq)]
-pub enum Stmt {
-    /// A let statement (e.g. `let x = 10;`)
-    Let {
-        identifier: String,
-        value: Expr,
-    },
-
-    Expr(Expr),
 }
 
 /// An unary operator (e.g. -[Integer], +[Integer])
