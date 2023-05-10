@@ -42,7 +42,9 @@ impl<'a> Parser<'a> {
 
     /// Parse a single statement
     fn parse_statement(&mut self) -> anyhow::Result<Stmt> {
-        self.parse_add()
+        let expr = self.parse_add()?;
+
+        Ok(Stmt::Expr(expr))
     }
 
     /// Recursively parse an expression
@@ -202,7 +204,7 @@ mod tests {
     fn parsing_integer() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Integer(1)]
+                stmts: vec![Stmt::Expr(Expr::Integer(1))]
             },
             Parser::new(&vec![Token::Integer(1)]).parse().unwrap()
         );
@@ -212,10 +214,10 @@ mod tests {
     fn parsing_unary_operators() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Unary {
+                stmts: vec![Stmt::Expr(Expr::Unary {
                     operator: UnOp::Plus,
                     value: Box::new(Expr::Integer(1))
-                }]
+                })]
             },
             Parser::new(&vec![Token::Plus, Token::Integer(1)])
                 .parse()
@@ -224,10 +226,10 @@ mod tests {
 
         assert_eq!(
             Program {
-                stmts: vec![Expr::Unary {
+                stmts: vec![Stmt::Expr(Expr::Unary {
                     operator: UnOp::Minus,
                     value: Box::new(Expr::Integer(1))
-                }]
+                })]
             },
             Parser::new(&vec![Token::Hyphen, Token::Integer(1)])
                 .parse()
@@ -239,11 +241,11 @@ mod tests {
     fn parsing_binary_expression() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Binary {
+                stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Add,
                     lhs: Box::new(Expr::Integer(1)),
                     rhs: Box::new(Expr::Integer(2))
-                }]
+                })]
             },
             Parser::new(&vec![Token::Integer(1), Token::Plus, Token::Integer(2)])
                 .parse()
@@ -255,7 +257,7 @@ mod tests {
     fn parsing_multiplication_expression() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Binary {
+                stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Mul,
                     lhs: Box::new(Expr::Binary {
                         operator: BinOp::Mul,
@@ -263,7 +265,7 @@ mod tests {
                         rhs: Box::new(Expr::Integer(3)),
                     }),
                     rhs: Box::new(Expr::Integer(4)),
-                }]
+                })]
             },
             Parser::new(&vec![
                 Token::Integer(2),
@@ -281,7 +283,7 @@ mod tests {
     fn parsing_exponentiation_expression() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Binary {
+                stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Pow,
                     lhs: Box::new(Expr::Integer(2)),
                     rhs: Box::new(Expr::Binary {
@@ -293,7 +295,7 @@ mod tests {
                             rhs: Box::new(Expr::Integer(5)),
                         }),
                     }),
-                }]
+                })]
             },
             Parser::new(&vec![
                 Token::Integer(2),
@@ -313,7 +315,7 @@ mod tests {
     fn parsing_complex_expression() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Binary {
+                stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Add,
                     lhs: Box::new(Expr::Integer(1)),
                     rhs: Box::new(Expr::Binary {
@@ -325,7 +327,7 @@ mod tests {
                             rhs: Box::new(Expr::Integer(4)),
                         }),
                     }),
-                }]
+                })]
             },
             Parser::new(&vec![
                 Token::Integer(1),
@@ -345,7 +347,7 @@ mod tests {
     fn parsing_expression_with_parentheses() {
         assert_eq!(
             Program {
-                stmts: vec![Expr::Binary {
+                stmts: vec![Stmt::Expr(Expr::Binary {
                     operator: BinOp::Mul,
                     lhs: Box::new(Expr::Binary {
                         operator: BinOp::Add,
@@ -353,7 +355,7 @@ mod tests {
                         rhs: Box::new(Expr::Integer(2)),
                     }),
                     rhs: Box::new(Expr::Integer(3)),
-                }]
+                })]
             },
             Parser::new(&vec![
                 Token::LeftParen,

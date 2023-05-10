@@ -6,17 +6,25 @@ pub struct Program {
     pub stmts: Vec<Stmt>,
 }
 
-/// A single statement
-pub type Stmt = Expr;
-
 /// The type to which a program will evaluate
 pub type ProgramOutput = Vec<i32>;
+
+#[derive(Debug, PartialEq)]
+pub enum Value {
+    Integer(i32),
+    Float(u32),
+    Str(String),
+    Bool(bool),
+}
 
 /// An expression is a group of child expressions that evaluate to a single value
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     /// Single integer value (e.g. 42)
     Integer(i32),
+
+    /// A variable (e.g. `x`)
+    Ident(String),
 
     /// Unary operation (e.g. +1, -2)
     Unary { operator: UnOp, value: Box<Expr> },
@@ -27,6 +35,18 @@ pub enum Expr {
         lhs: Box<Expr>,
         rhs: Box<Expr>,
     },
+}
+
+/// A statement
+#[derive(Debug, PartialEq)]
+pub enum Stmt {
+    /// A let statement (e.g. `let x = 10;`)
+    Let {
+        identifier: String,
+        value: Expr,
+    },
+
+    Expr(Expr),
 }
 
 /// An unary operator (e.g. -[Integer], +[Integer])

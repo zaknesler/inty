@@ -1,40 +1,53 @@
 use crate::core::*;
+use std::{collections::HashMap, rc::Rc};
 
 pub struct Evaluator<'a> {
     prog: &'a Program,
+    environment: Rc<HashMap<String, i32>>,
 }
 
 impl<'a> Evaluator<'a> {
     pub fn new(prog: &'a Program) -> Self {
-        Self { prog }
+        Self {
+            prog,
+            environment: Rc::new(HashMap::new()),
+        }
     }
 
     /// Evaluate a program's statements into a list of values
     pub fn eval(&self) -> anyhow::Result<ProgramOutput> {
         let mut results = vec![];
 
-        for expr in &self.prog.stmts {
-            results.push(self.eval_node(expr)?);
+        for stmt in &self.prog.stmts {
+            results.push(self.eval_stmt(stmt)?);
         }
 
         Ok(results)
     }
 
-    /// Recursively evaluate a single expression node
-    fn eval_node(&self, node: &Expr) -> anyhow::Result<i32> {
-        Ok(match node.clone() {
+    fn eval_stmt(&self, stmt: &Stmt) -> anyhow::Result<i32> {
+        match stmt {
+            Stmt::Expr(expr) => self.eval_expr(&expr),
+            Stmt::Let { .. } => todo!(),
+        }
+    }
+
+    /// Recursively evaluate a single statement
+    fn eval_expr(&self, expr: &Expr) -> anyhow::Result<i32> {
+        Ok(match expr.clone() {
             Expr::Integer(val) => *val,
+            Expr::Ident(_name) => todo!(),
             Expr::Unary { operator, value } => match operator {
-                UnOp::Minus => -1 * self.eval_node(value)?,
-                UnOp::Plus => self.eval_node(value)?,
+                UnOp::Minus => -1 * self.eval_expr(value)?,
+                UnOp::Plus => self.eval_expr(value)?,
             },
             Expr::Binary { operator, lhs, rhs } => match operator {
-                BinOp::Add => self.eval_node(lhs.as_ref())? + self.eval_node(rhs.as_ref())?,
-                BinOp::Sub => self.eval_node(lhs.as_ref())? - self.eval_node(rhs.as_ref())?,
-                BinOp::Mul => self.eval_node(lhs.as_ref())? * self.eval_node(rhs.as_ref())?,
+                BinOp::Add => self.eval_expr(lhs.as_ref())? + self.eval_expr(rhs.as_ref())?,
+                BinOp::Sub => self.eval_expr(lhs.as_ref())? - self.eval_expr(rhs.as_ref())?,
+                BinOp::Mul => self.eval_expr(lhs.as_ref())? * self.eval_expr(rhs.as_ref())?,
                 BinOp::Div => {
-                    let left = self.eval_node(lhs.as_ref())?;
-                    let right = self.eval_node(rhs.as_ref())?;
+                    let left = self.eval_expr(lhs.as_ref())?;
+                    let right = self.eval_expr(rhs.as_ref())?;
 
                     match right {
                         0 => anyhow::bail!(Error::DivideByZeroError),
@@ -42,8 +55,8 @@ impl<'a> Evaluator<'a> {
                     }
                 }
                 BinOp::Pow => {
-                    let base = self.eval_node(lhs.as_ref())?;
-                    let pow = self.eval_node(rhs.as_ref())?;
+                    let base = self.eval_expr(lhs.as_ref())?;
+                    let pow = self.eval_expr(rhs.as_ref())?;
 
                     if pow < 0 {
                         anyhow::bail!(Error::LogicError {
@@ -64,11 +77,9 @@ mod tests {
 
     #[test]
     fn single_number() {
-        let eval = Evaluator {
-            prog: &Program {
-                stmts: vec![Expr::Integer(100)],
-            },
-        }
+        let eval = Evaluator::new(&Program {
+            stmts: vec![Stmt::Expr(Expr::Integer(100))],
+        })
         .eval()
         .unwrap();
 
@@ -77,15 +88,13 @@ mod tests {
 
     #[test]
     fn basic_addition() {
-        let eval = Evaluator {
-            prog: &Program {
-                stmts: vec![Expr::Binary {
-                    operator: BinOp::Add,
-                    lhs: Box::new(Expr::Integer(1)),
-                    rhs: Box::new(Expr::Integer(2)),
-                }],
-            },
-        }
+        let eval = Evaluator::new(&Program {
+            stmts: vec![Stmt::Expr(Expr::Binary {
+                operator: BinOp::Add,
+                lhs: Box::new(Expr::Integer(1)),
+                rhs: Box::new(Expr::Integer(2)),
+            })],
+        })
         .eval()
         .unwrap();
 

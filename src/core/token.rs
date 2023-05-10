@@ -38,9 +38,9 @@ impl Display for Token {
 impl Token {
     /// Attempt to map a reserved keyword to its token
     pub fn map_keyword(text: &str) -> Option<Self> {
-        match text {
-            "let" => Some(Token::Let),
-            _ => None,
-        }
+        Some(match text {
+            "let" => Token::Let,
+            _ => return None,
+        })
     }
 }
