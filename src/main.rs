@@ -11,7 +11,7 @@ use clap::Parser as _;
 use eval::Evaluator;
 use lexer::Lexer;
 use parser::Parser;
-use std::io::{self, BufRead, Write};
+use rustyline::{error::ReadlineError, DefaultEditor};
 
 fn main() -> anyhow::Result<()> {
     let args = args::Args::parse();
@@ -31,30 +31,23 @@ fn main() -> anyhow::Result<()> {
         }
 
         args::Command::Repl => {
+            let mut rl = DefaultEditor::new()?;
             let mut eval = Evaluator::new();
 
             loop {
-                print!("> ");
-                io::stdout().flush().expect("Could not flush output");
-
-                let mut line = String::new();
-                let stream = io::stdin();
-                let bytes = stream
-                    .lock()
-                    .read_line(&mut line)
-                    .expect("Could not read line");
-
-                if bytes == 0 {
-                    break;
-                }
-
-                if line.trim().is_empty() {
-                    continue;
-                }
-
-                match process_string(&mut eval, line, args.debug) {
-                    Ok(values) => print_output(&values),
-                    Err(err) => println!("{}", err),
+                match rl.readline("> ") {
+                    Ok(line) => match process_string(&mut eval, line, args.debug) {
+                        Ok(values) => print_output(&values),
+                        Err(err) => println!("{}", err),
+                    },
+                    Err(ReadlineError::Eof | ReadlineError::Interrupted) => {
+                        println!("inty session ended");
+                        break;
+                    }
+                    Err(err) => {
+                        println!("Error: {:?}", err);
+                        break;
+                    }
                 }
             }
         }
