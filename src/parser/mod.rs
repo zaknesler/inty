@@ -1,14 +1,13 @@
+use crate::core::*;
 use std::rc::Rc;
 
-use crate::core::*;
-
 pub struct Parser<'a> {
-    pub tokens: &'a Vec<Token>,
+    pub tokens: &'a [Token],
     pub position: usize,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a Vec<Token>) -> Self {
+    pub fn new(tokens: &'a [Token]) -> Self {
         Self {
             tokens,
             position: 0,
@@ -44,27 +43,23 @@ impl<'a> Parser<'a> {
 
     /// Parse a single statement
     fn parse_statement(&mut self) -> anyhow::Result<Stmt> {
-        let token = self.clone_current()?;
-
-        Ok(match token {
+        match self.clone_current()? {
             Token::Let => {
                 self.advance();
                 if let Token::Ident(ident) = self.clone_current()? {
                     self.advance();
                     self.consume(Token::Equal)?;
 
-                    Stmt::Let {
+                    Ok(Stmt::Let {
                         ident,
                         expr: self.parse_expr()?,
-                    }
+                    })
                 } else {
-                    anyhow::bail!("Expected identifier")
+                    anyhow::bail!("Expected identifier");
                 }
             }
-
-            // A statement can be a single expression
-            _ => Stmt::Expr(self.parse_expr()?),
-        })
+            _ => Ok(Stmt::Expr(self.parse_expr()?)),
+        }
     }
 
     /// Recursively parse an expression
