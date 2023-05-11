@@ -1,7 +1,8 @@
+use crate::core::*;
 use std::collections::HashMap;
 
 pub struct Environment {
-    table: Box<HashMap<String, i32>>,
+    table: Box<HashMap<String, Value>>,
 }
 
 impl Environment {
@@ -12,7 +13,7 @@ impl Environment {
     }
 
     /// Try to get a value from the environment by its identifier
-    pub fn get(&self, ident: String) -> Option<&i32> {
+    pub fn get(&self, ident: String) -> Option<&Value> {
         self.table.get(&ident)
     }
 
@@ -22,7 +23,7 @@ impl Environment {
     }
 
     /// Insert a new value into the environment
-    pub fn put(&mut self, ident: String, value: i32) -> Option<i32> {
+    pub fn put(&mut self, ident: String, value: Value) -> Option<Value> {
         self.table.insert(ident, value)
     }
 }

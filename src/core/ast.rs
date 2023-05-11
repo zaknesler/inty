@@ -11,12 +11,13 @@ pub enum Stmt {
     Expr(Expr),
 }
 
-#[derive(Debug, PartialEq)]
+/// Internal values for evaluation
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Integer(i32),
-    // Float(u32),
+    // Float(f32),
+    Bool(bool),
     // Str(String),
-    // Bool(bool),
 }
 
 /// An expression is a group of child expressions that evaluate to a single value
@@ -24,6 +25,9 @@ pub enum Value {
 pub enum Expr {
     /// Single integer value (e.g. 42)
     Integer(i32),
+
+    /// Boolean value (e.g. true/false)
+    Bool(bool),
 
     /// A variable (e.g. `x`)
     Ident(String),
@@ -37,16 +41,29 @@ pub enum Expr {
         lhs: Rc<Expr>,
         rhs: Rc<Expr>,
     },
+
+    Logical {
+        operator: LogOp,
+        lhs: Rc<Expr>,
+        rhs: Rc<Expr>,
+    },
+
+    Relational {
+        operator: RelOp,
+        lhs: Rc<Expr>,
+        rhs: Rc<Expr>,
+    },
 }
 
-/// An unary operator (e.g. -[Integer], +[Integer])
+/// An unary operator (e.g. -[int], +[int])
 #[derive(Debug, PartialEq)]
 pub enum UnOp {
     Plus,
     Minus,
+    Negate,
 }
 
-/// A binary operator (e.g. [Integer] + [Integer])
+/// A binary operator (e.g. [int] + [int])
 #[derive(Debug, PartialEq)]
 pub enum BinOp {
     Add,
@@ -56,11 +73,30 @@ pub enum BinOp {
     Pow,
 }
 
+/// A logical operator (e.g. [bool] + [bool])
+#[derive(Debug, PartialEq)]
+pub enum LogOp {
+    Or,
+    And,
+}
+
+/// A relational operator (e.g. [int] >= [int])
+#[derive(Debug, PartialEq)]
+pub enum RelOp {
+    Eq,
+    Ne,
+    Gt,
+    Lt,
+    Gte,
+    Lte,
+}
+
 impl From<Token> for UnOp {
     fn from(value: Token) -> Self {
         match value {
             Token::Hyphen => UnOp::Minus,
             Token::Plus => UnOp::Plus,
+            Token::Bang => UnOp::Negate,
             _ => panic!("Invalid token"),
         }
     }
@@ -83,6 +119,25 @@ impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Value::Integer(val) => write!(f, "{}", val),
+            // Value::Float(val) => write!(f, "{}", val),
+            Value::Bool(val) => write!(f, "{}", val),
+            // Value::Str(val) => write!(f, "{}", val),
+        }
+    }
+}
+
+impl Value {
+    pub fn unwrap_integer(&self) -> anyhow::Result<i32> {
+        match self {
+            Value::Integer(val) => Ok(*val),
+            _ => anyhow::bail!("{} is not an integer", self),
+        }
+    }
+
+    pub fn unwrap_bool(&self) -> anyhow::Result<bool> {
+        match self {
+            Value::Bool(val) => Ok(*val),
+            _ => anyhow::bail!("{} is not a boolean", self),
         }
     }
 }

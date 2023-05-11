@@ -16,7 +16,7 @@ impl Lexer {
                     while let Some('0'..='9') = chars.peek() {
                         number.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
-                    Token::Integer(number.parse::<i32>()?)
+                    Token::Integer(number.parse()?)
                 }
                 'a'..='z' => {
                     let mut ident = ch.to_string();
@@ -35,9 +35,10 @@ impl Lexer {
                 '*' => Token::Star,
                 '/' => Token::Divide,
                 '^' => Token::Caret,
+                '=' => Token::Equal,
+                '!' => Token::Bang,
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
-                '=' => Token::Equal,
                 _ => anyhow::bail!(Error::TokenParsingError {
                     character: ch,
                     message: "Unknown token".to_string()

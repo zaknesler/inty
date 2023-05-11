@@ -2,9 +2,16 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+    // Values
     Integer(i32),
     Ident(String),
+
+    // Keywords
     Let,
+    True,
+    False,
+
+    // Symbols
     Semicolon,
     Plus,
     Hyphen,
@@ -12,6 +19,7 @@ pub enum Token {
     Divide,
     Caret,
     Equal,
+    Bang,
     LeftParen,
     RightParen,
     LeftBrace,
@@ -23,7 +31,11 @@ impl Display for Token {
         match self {
             Token::Integer(value) => write!(f, "{}", value),
             Token::Ident(value) => write!(f, "{}", value),
+
             Token::Let => write!(f, "let"),
+            Token::True => write!(f, "true"),
+            Token::False => write!(f, "false"),
+
             Token::Semicolon => write!(f, ";"),
             Token::Plus => write!(f, "+"),
             Token::Hyphen => write!(f, "-"),
@@ -31,6 +43,7 @@ impl Display for Token {
             Token::Divide => write!(f, "/"),
             Token::Caret => write!(f, "^"),
             Token::Equal => write!(f, "="),
+            Token::Bang => write!(f, "!"),
             Token::LeftParen => write!(f, "("),
             Token::RightParen => write!(f, ")"),
             Token::LeftBrace => write!(f, "{{"),
@@ -44,6 +57,8 @@ impl Token {
     pub fn map_keyword(text: &str) -> Option<Self> {
         Some(match text {
             "let" => Token::Let,
+            "true" => Token::True,
+            "false" => Token::False,
             _ => return None,
         })
     }
