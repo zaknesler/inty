@@ -64,7 +64,7 @@ fn process_string(
     eval: &mut Evaluator,
     input: String,
     debug: bool,
-) -> anyhow::Result<ProgramOutput> {
+) -> anyhow::Result<Vec<Option<Value>>> {
     // Tokenize input
     let tokens = Lexer::tokenize(input)?;
 
@@ -83,12 +83,12 @@ fn process_string(
     eval.eval(stmts)
 }
 
-fn print_output(values: &Vec<Value>) {
+fn print_output(values: &Vec<Option<Value>>) {
     values.iter().for_each(|v| {
-        if *v != Value::None {
+        if let Some(v) = v {
             println!("{}", v);
         }
-    })
+    });
 }
 
 #[cfg(test)]
@@ -148,7 +148,7 @@ mod tests {
 
             assert_eq!(
                 results[0],
-                Value::Integer(val),
+                Some(Value::Integer(val)),
                 "expression = \"{}\" (line {})",
                 string,
                 start + (index as u32)
@@ -160,6 +160,6 @@ mod tests {
     fn let_statement() {
         let mut eval = Evaluator::new();
         let values = process_string(&mut eval, "let x = 42; x".into(), false).unwrap();
-        assert_eq!(vec![Value::None, Value::Integer(42)], values);
+        assert_eq!(vec![None, Some(Value::Integer(42))], values);
     }
 }

@@ -11,9 +11,11 @@ pub enum Token {
     Star,
     Divide,
     Caret,
+    Equal,
     LeftParen,
     RightParen,
-    Equal,
+    LeftBrace,
+    RightBrace,
 }
 
 impl Display for Token {
@@ -28,9 +30,11 @@ impl Display for Token {
             Token::Star => write!(f, "*"),
             Token::Divide => write!(f, "/"),
             Token::Caret => write!(f, "^"),
+            Token::Equal => write!(f, "="),
             Token::LeftParen => write!(f, "("),
             Token::RightParen => write!(f, ")"),
-            Token::Equal => write!(f, "="),
+            Token::LeftBrace => write!(f, "{{"),
+            Token::RightBrace => write!(f, "}}"),
         }
     }
 }

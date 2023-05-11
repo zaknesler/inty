@@ -15,7 +15,7 @@ impl Evaluator {
     }
 
     /// Evaluate a program's statements into a list of values
-    pub fn eval(&mut self, stmts: Vec<Stmt>) -> anyhow::Result<ProgramOutput> {
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> anyhow::Result<Vec<Option<Value>>> {
         let mut results = vec![];
 
         for stmt in &stmts {
@@ -25,13 +25,13 @@ impl Evaluator {
         Ok(results)
     }
 
-    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Value> {
+    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Option<Value>> {
         Ok(match stmt {
-            Stmt::Expr(expr) => Value::Integer(self.eval_expr(&expr)?),
+            Stmt::Expr(expr) => Some(Value::Integer(self.eval_expr(&expr)?)),
             Stmt::Let { ident, expr } => {
                 self.env.put(ident.clone(), self.eval_expr(expr)?);
 
-                Value::None
+                None
             }
         })
     }
@@ -91,7 +91,10 @@ mod tests {
             .eval(vec![Stmt::Expr(Expr::Integer(100))])
             .unwrap();
 
-        assert_eq!(Value::Integer(100), *value.first().unwrap());
+        assert_eq!(
+            Value::Integer(100),
+            *value.last().unwrap().as_ref().unwrap()
+        );
     }
 
     #[test]
@@ -104,7 +107,7 @@ mod tests {
             })])
             .unwrap();
 
-        assert_eq!(Value::Integer(3), *value.first().unwrap());
+        assert_eq!(Value::Integer(3), *value.last().unwrap().as_ref().unwrap());
     }
 
     #[test]
@@ -135,6 +138,6 @@ mod tests {
             ])
             .unwrap();
 
-        assert_eq!(Value::Integer(42), *value.last().unwrap());
+        assert_eq!(Value::Integer(42), *value.last().unwrap().as_ref().unwrap());
     }
 }
