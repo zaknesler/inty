@@ -1,34 +1,62 @@
+mod env;
+
+use self::env::Environment;
 use crate::core::*;
 
-pub struct Evaluator<'a> {
-    ast: &'a Ast,
+pub struct Evaluator {
+    env: Environment,
 }
 
-impl<'a> Evaluator<'a> {
-    pub fn new(ast: &'a Ast) -> Self {
-        Self { ast }
+impl Evaluator {
+    pub fn new() -> Self {
+        Self {
+            env: Environment::new(),
+        }
     }
 
-    /// Evaluate an AST to a single value
-    pub fn eval(&self) -> anyhow::Result<i32> {
-        self.eval_node(&self.ast.root)
+    /// Evaluate a program's statements into a list of values
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> anyhow::Result<ProgramOutput> {
+        let mut results = vec![];
+
+        for stmt in &stmts {
+            results.push(self.eval_stmt(stmt)?);
+        }
+
+        Ok(results)
     }
 
-    /// Recursively evaluate a single expression node
-    fn eval_node(&self, node: &Expr) -> anyhow::Result<i32> {
-        Ok(match node.clone() {
+    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Value> {
+        Ok(match stmt {
+            Stmt::Expr(expr) => Value::Integer(self.eval_expr(&expr)?),
+            Stmt::Let { ident, expr } => {
+                self.env.put(ident.clone(), self.eval_expr(expr)?);
+
+                Value::None
+            }
+        })
+    }
+
+    /// Recursively evaluate a single statement
+    fn eval_expr(&self, expr: &Expr) -> anyhow::Result<i32> {
+        Ok(match expr.clone() {
             Expr::Integer(val) => *val,
+            Expr::Ident(ident) => match self.env.get(ident.clone()) {
+                Some(val) => *val,
+                None => anyhow::bail!(Error::UnknownIdentifier {
+                    ident: ident.clone()
+                }),
+            },
             Expr::Unary { operator, value } => match operator {
-                UnOp::Minus => -1 * self.eval_node(value)?,
-                UnOp::Plus => self.eval_node(value)?,
+                UnOp::Minus => -1 * self.eval_expr(value)?,
+                UnOp::Plus => self.eval_expr(value)?,
             },
             Expr::Binary { operator, lhs, rhs } => match operator {
-                BinOp::Add => self.eval_node(lhs.as_ref())? + self.eval_node(rhs.as_ref())?,
-                BinOp::Sub => self.eval_node(lhs.as_ref())? - self.eval_node(rhs.as_ref())?,
-                BinOp::Mul => self.eval_node(lhs.as_ref())? * self.eval_node(rhs.as_ref())?,
+                BinOp::Add => self.eval_expr(lhs.as_ref())? + self.eval_expr(rhs.as_ref())?,
+                BinOp::Sub => self.eval_expr(lhs.as_ref())? - self.eval_expr(rhs.as_ref())?,
+                BinOp::Mul => self.eval_expr(lhs.as_ref())? * self.eval_expr(rhs.as_ref())?,
                 BinOp::Div => {
-                    let left = self.eval_node(lhs.as_ref())?;
-                    let right = self.eval_node(rhs.as_ref())?;
+                    let left = self.eval_expr(lhs.as_ref())?;
+                    let right = self.eval_expr(rhs.as_ref())?;
 
                     match right {
                         0 => anyhow::bail!(Error::DivideByZeroError),
@@ -36,8 +64,8 @@ impl<'a> Evaluator<'a> {
                     }
                 }
                 BinOp::Pow => {
-                    let base = self.eval_node(lhs.as_ref())?;
-                    let pow = self.eval_node(rhs.as_ref())?;
+                    let base = self.eval_expr(lhs.as_ref())?;
+                    let pow = self.eval_expr(rhs.as_ref())?;
 
                     if pow < 0 {
                         anyhow::bail!(Error::LogicError {
@@ -55,36 +83,58 @@ impl<'a> Evaluator<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::rc::Rc;
 
     #[test]
     fn single_number() {
-        assert_eq!(
-            100,
-            Evaluator {
-                ast: &Ast {
-                    root: Expr::Integer(100),
-                },
-            }
-            .eval()
-            .unwrap()
-        );
+        let value = Evaluator::new()
+            .eval(vec![Stmt::Expr(Expr::Integer(100))])
+            .unwrap();
+
+        assert_eq!(Value::Integer(100), *value.first().unwrap());
     }
 
     #[test]
     fn basic_addition() {
-        assert_eq!(
-            3,
-            Evaluator {
-                ast: &Ast {
-                    root: Expr::Binary {
-                        operator: BinOp::Add,
-                        lhs: Box::new(Expr::Integer(1)),
-                        rhs: Box::new(Expr::Integer(2)),
-                    },
+        let value = Evaluator::new()
+            .eval(vec![Stmt::Expr(Expr::Binary {
+                operator: BinOp::Add,
+                lhs: Rc::new(Expr::Integer(1)),
+                rhs: Rc::new(Expr::Integer(2)),
+            })])
+            .unwrap();
+
+        assert_eq!(Value::Integer(3), *value.first().unwrap());
+    }
+
+    #[test]
+    fn variable_assignment() {
+        let mut evaler = Evaluator::new();
+
+        evaler
+            .eval(vec![Stmt::Let {
+                ident: "foo".into(),
+                expr: Expr::Integer(42),
+            }])
+            .unwrap();
+
+        assert_eq!(42, *evaler.env.get("foo".into()).unwrap());
+    }
+
+    #[test]
+    fn variable_assignment_and_retrieval() {
+        let mut evaler = Evaluator::new();
+
+        let value = evaler
+            .eval(vec![
+                Stmt::Let {
+                    ident: "foo".into(),
+                    expr: Expr::Integer(42),
                 },
-            }
-            .eval()
-            .unwrap()
-        );
+                Stmt::Expr(Expr::Ident("foo".to_string())),
+            ])
+            .unwrap();
+
+        assert_eq!(Value::Integer(42), *value.last().unwrap());
     }
 }

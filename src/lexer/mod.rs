@@ -1,19 +1,13 @@
 use crate::core::*;
 
-pub struct Lexer {
-    pub input: String,
-}
+pub struct Lexer {}
 
 impl Lexer {
-    pub fn new(input: String) -> Self {
-        Self { input }
-    }
-
     /// Parse a string into a vector of valid tokens
-    pub fn tokenize(&self) -> anyhow::Result<Vec<Token>> {
+    pub fn tokenize(input: String) -> anyhow::Result<Vec<Token>> {
         let mut tokens = vec![];
 
-        let mut chars = self.input.chars().peekable();
+        let mut chars = input.chars().peekable();
         while let Some(ch) = chars.next() {
             tokens.push(match ch {
                 ' ' | '\t' | '\r' | '\n' => continue,
@@ -24,6 +18,18 @@ impl Lexer {
                     }
                     Token::Integer(number.parse::<i32>()?)
                 }
+                'a'..='z' => {
+                    let mut ident = ch.to_string();
+                    while let Some('a'..='z' | 'A'..='Z' | '0'..='9' | '_') = chars.peek() {
+                        ident.push(chars.next().expect("we are peeking ahead so this is safe"));
+                    }
+
+                    match Token::map_keyword(ident.as_ref()) {
+                        Some(keyword) => keyword,
+                        None => Token::Ident(ident),
+                    }
+                }
+                ';' => Token::Semicolon,
                 '+' => Token::Plus,
                 '-' => Token::Hyphen,
                 '*' => Token::Star,
@@ -31,6 +37,7 @@ impl Lexer {
                 '^' => Token::Caret,
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
+                '=' => Token::Equal,
                 _ => anyhow::bail!(Error::TokenParsingError {
                     character: ch,
                     message: "Unknown token".to_string()
@@ -48,8 +55,7 @@ mod tests {
 
     #[test]
     fn tokenize() {
-        let lexer = Lexer::new("1 + 2 - 3 * 4 / 5".to_string());
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize("1 + 2 - 3 * 4 / 5".into()).unwrap();
 
         assert_eq!(
             tokens,
@@ -69,8 +75,7 @@ mod tests {
 
     #[test]
     fn tokenize_paren() {
-        let lexer = Lexer::new("1 + (2 - 3) * 4 / 5".to_string());
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize("1 + (2 - 3) * 4 / 5".into()).unwrap();
 
         assert_eq!(
             tokens,
@@ -92,13 +97,12 @@ mod tests {
 
     #[test]
     fn tokenize_error() {
-        let lexer = Lexer::new("1 + 2 - 3 * 4 / 5 + a".to_string());
-        let tokens = lexer.tokenize();
+        let tokens = Lexer::tokenize("]".into());
 
         assert!(tokens.is_err());
         assert_eq!(
             tokens.unwrap_err().to_string(),
-            "Token parsing error: Unknown token: a".to_string()
+            "Token parsing error: Unknown token: ]".to_string()
         );
     }
 }
