@@ -443,4 +443,92 @@ mod tests {
             assert!(ast.is_err());
         })
     }
+
+    #[test]
+    fn parsing_logical_and_expression() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::Logical {
+                operator: LogOp::And,
+                lhs: Rc::new(Expr::Bool(true)),
+                rhs: Rc::new(Expr::Bool(false))
+            })],
+            Parser::new(&vec![Token::True, Token::And, Token::False,])
+                .parse()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn parsing_logical_or_expression() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::Logical {
+                operator: LogOp::Or,
+                lhs: Rc::new(Expr::Bool(true)),
+                rhs: Rc::new(Expr::Bool(false))
+            })],
+            Parser::new(&vec![Token::True, Token::Or, Token::False,])
+                .parse()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn parsing_logical_and_or_expression() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::Logical {
+                operator: LogOp::Or,
+                lhs: Rc::new(Expr::Logical {
+                    operator: LogOp::And,
+                    lhs: Rc::new(Expr::Bool(true)),
+                    rhs: Rc::new(Expr::Bool(false)),
+                }),
+                rhs: Rc::new(Expr::Logical {
+                    operator: LogOp::And,
+                    lhs: Rc::new(Expr::Bool(false)),
+                    rhs: Rc::new(Expr::Bool(true)),
+                }),
+            })],
+            Parser::new(&vec![
+                Token::True,
+                Token::And,
+                Token::False,
+                Token::Or,
+                Token::False,
+                Token::And,
+                Token::True,
+            ])
+            .parse()
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn parsing_logical_or_and_expression() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::Logical {
+                operator: LogOp::And,
+                lhs: Rc::new(Expr::Logical {
+                    operator: LogOp::Or,
+                    lhs: Rc::new(Expr::Bool(true)),
+                    rhs: Rc::new(Expr::Bool(false)),
+                }),
+                rhs: Rc::new(Expr::Logical {
+                    operator: LogOp::Or,
+                    lhs: Rc::new(Expr::Bool(false)),
+                    rhs: Rc::new(Expr::Bool(true)),
+                }),
+            })],
+            Parser::new(&vec![
+                Token::True,
+                Token::Or,
+                Token::False,
+                Token::And,
+                Token::False,
+                Token::Or,
+                Token::True,
+            ])
+            .parse()
+            .unwrap()
+        );
+    }
 }
