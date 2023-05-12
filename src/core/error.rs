@@ -7,6 +7,9 @@ pub enum Error {
         token: Option<Token>,
         message: String,
     },
+    UnexpectedChar {
+        character: char,
+    },
     TokenParsingError {
         character: char,
         message: String,
@@ -34,6 +37,9 @@ impl Display for Error {
                 Some(token) => write!(f, "Syntax error: {}: {}", message, token),
                 None => write!(f, "Syntax error: {}", message),
             },
+            Error::UnexpectedChar { character } => {
+                write!(f, "Unexpected character: {}", character)
+            }
             Error::TokenParsingError { character, message } => {
                 write!(f, "Token parsing error: {}: {}", message, character)
             }

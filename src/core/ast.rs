@@ -15,9 +15,7 @@ pub enum Stmt {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Integer(i32),
-    // Float(f32),
     Bool(bool),
-    // Str(String),
 }
 
 /// An expression is a group of child expressions that evaluate to a single value
@@ -115,13 +113,35 @@ impl From<Token> for BinOp {
     }
 }
 
+impl From<Token> for LogOp {
+    fn from(value: Token) -> Self {
+        match value {
+            Token::And => LogOp::And,
+            Token::Or => LogOp::Or,
+            _ => panic!("Invalid token"),
+        }
+    }
+}
+
+impl From<Token> for RelOp {
+    fn from(value: Token) -> Self {
+        match value {
+            Token::RelEq => RelOp::Eq,
+            Token::RelNe => RelOp::Ne,
+            Token::RelGt => RelOp::Gt,
+            Token::RelLt => RelOp::Lt,
+            Token::RelGte => RelOp::Gte,
+            Token::RelLte => RelOp::Lte,
+            _ => panic!("Invalid token"),
+        }
+    }
+}
+
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Value::Integer(val) => write!(f, "{}", val),
-            // Value::Float(val) => write!(f, "{}", val),
             Value::Bool(val) => write!(f, "{}", val),
-            // Value::Str(val) => write!(f, "{}", val),
         }
     }
 }

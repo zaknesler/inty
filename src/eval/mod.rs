@@ -93,8 +93,36 @@ impl Evaluator {
                     base.pow(pow as u32)
                 }
             }),
-            Expr::Logical { operator, lhs, rhs } => todo!(),
-            Expr::Relational { operator, lhs, rhs } => todo!(),
+            Expr::Logical { operator, lhs, rhs } => Value::Bool({
+                let left = self.eval_expr(lhs.as_ref())?.unwrap_bool()?;
+                let right = self.eval_expr(rhs.as_ref())?.unwrap_bool()?;
+
+                match operator {
+                    LogOp::And => left && right,
+                    LogOp::Or => left || right,
+                }
+            }),
+            Expr::Relational { operator, lhs, rhs } => Value::Bool({
+                let left = self.eval_expr(lhs.as_ref())?;
+                let right = self.eval_expr(rhs.as_ref())?;
+
+                match (left, right) {
+                    (Value::Integer(lhs), Value::Integer(rhs)) => match operator {
+                        RelOp::Eq => lhs == rhs,
+                        RelOp::Ne => lhs != rhs,
+                        RelOp::Gt => lhs > rhs,
+                        RelOp::Lt => lhs < rhs,
+                        RelOp::Gte => lhs >= rhs,
+                        RelOp::Lte => lhs <= rhs,
+                    },
+                    (Value::Bool(lhs), Value::Bool(rhs)) => match operator {
+                        RelOp::Eq => lhs == rhs,
+                        RelOp::Ne => lhs != rhs,
+                        _ => anyhow::bail!("operation not permitted"),
+                    },
+                    _ => anyhow::bail!("comparison not permitted"),
+                }
+            }),
         })
     }
 }

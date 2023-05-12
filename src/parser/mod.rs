@@ -81,6 +81,33 @@ impl<'a> Parser<'a> {
                     };
                 }
 
+                Token::And | Token::Or => {
+                    self.advance();
+                    let rhs = self.parse_mult()?;
+
+                    lhs = Expr::Logical {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
+                Token::RelEq
+                | Token::RelNe
+                | Token::RelGt
+                | Token::RelLt
+                | Token::RelGte
+                | Token::RelLte => {
+                    self.advance();
+                    let rhs = self.parse_mult()?;
+
+                    lhs = Expr::Relational {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
                 _ => break,
             }
         }
