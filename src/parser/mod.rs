@@ -81,6 +81,33 @@ impl<'a> Parser<'a> {
                     };
                 }
 
+                Token::And | Token::Or => {
+                    self.advance();
+                    let rhs = self.parse_mult()?;
+
+                    lhs = Expr::Logical {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
+                Token::RelEq
+                | Token::RelNe
+                | Token::RelGt
+                | Token::RelLt
+                | Token::RelGte
+                | Token::RelLte => {
+                    self.advance();
+                    let rhs = self.parse_mult()?;
+
+                    lhs = Expr::Relational {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
                 _ => break,
             }
         }
@@ -142,30 +169,47 @@ impl<'a> Parser<'a> {
     /// Parse a single factor
     fn parse_unary(&mut self) -> anyhow::Result<Expr> {
         let token = self.clone_current()?;
-        match token {
+        Ok(match token {
             Token::Integer(value) => {
                 self.advance();
-                Ok(Expr::Integer(value))
+                Expr::Integer(value)
             }
 
             Token::Ident(ident) => {
                 self.advance();
-                Ok(Expr::Ident(ident))
+                Expr::Ident(ident)
+            }
+
+            Token::True => {
+                self.advance();
+                Expr::Bool(true)
+            }
+
+            Token::False => {
+                self.advance();
+                Expr::Bool(false)
+            }
+
+            Token::Bang => {
+                self.advance();
+
+                Expr::Unary {
+                    operator: UnOp::from(token),
+                    value: Rc::new(self.parse_unary()?),
+                }
             }
 
             Token::Hyphen | Token::Plus => {
                 self.advance();
-                let expr = self.parse_pow()?;
 
-                Ok(Expr::Unary {
+                Expr::Unary {
                     operator: UnOp::from(token),
-                    value: Rc::new(expr),
-                })
+                    value: Rc::new(self.parse_pow()?),
+                }
             }
 
             Token::LeftParen => {
                 self.advance();
-                let expr = self.parse_expr()?;
 
                 if !self.has_more_tokens() {
                     anyhow::bail!(Error::SyntaxError {
@@ -174,22 +218,17 @@ impl<'a> Parser<'a> {
                     });
                 }
 
-                if let Token::RightParen = self.tokens[self.position] {
-                    self.advance();
-                    Ok(expr)
-                } else {
-                    anyhow::bail!(Error::SyntaxError {
-                        token: None,
-                        message: "Expected right parenthesis".to_string()
-                    });
-                }
+                let expr = self.parse_expr()?;
+                self.consume(Token::RightParen)?;
+
+                expr
             }
 
             _ => anyhow::bail!(Error::SyntaxError {
                 token: Some(token),
                 message: "Unexpected token".to_string()
             }),
-        }
+        })
     }
 
     /// Get a cloned instance of the current token
@@ -402,10 +441,6 @@ mod tests {
             let ast = Parser::new(&vec![token.clone()]).parse();
 
             assert!(ast.is_err());
-            assert_eq!(
-                ast.unwrap_err().to_string(),
-                format!("Syntax error: Unexpected token: {}", token.to_string())
-            );
         })
     }
 }

@@ -27,7 +27,7 @@ impl Evaluator {
 
     fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Option<Value>> {
         Ok(match stmt {
-            Stmt::Expr(expr) => Some(Value::Integer(self.eval_expr(&expr)?)),
+            Stmt::Expr(expr) => Some(self.eval_expr(&expr)?),
             Stmt::Let { ident, expr } => {
                 self.env.put(ident.clone(), self.eval_expr(expr)?);
 
@@ -37,26 +37,43 @@ impl Evaluator {
     }
 
     /// Recursively evaluate a single statement
-    fn eval_expr(&self, expr: &Expr) -> anyhow::Result<i32> {
+    fn eval_expr(&self, expr: &Expr) -> anyhow::Result<Value> {
         Ok(match expr.clone() {
-            Expr::Integer(val) => *val,
+            Expr::Integer(val) => Value::Integer(*val),
             Expr::Ident(ident) => match self.env.get(ident.clone()) {
-                Some(val) => *val,
+                Some(val) => val.clone(),
                 None => anyhow::bail!(Error::UnknownIdentifier {
                     ident: ident.clone()
                 }),
             },
+            Expr::Bool(val) => Value::Bool(*val),
             Expr::Unary { operator, value } => match operator {
-                UnOp::Minus => -1 * self.eval_expr(value)?,
+                UnOp::Minus => {
+                    if let Value::Integer(value) = self.eval_expr(value)? {
+                        Value::Integer(-1 * value)
+                    } else {
+                        anyhow::bail!("Expected integer!")
+                    }
+                }
                 UnOp::Plus => self.eval_expr(value)?,
+                UnOp::Negate => Value::Bool(!self.eval_expr(value)?.unwrap_bool()?),
             },
-            Expr::Binary { operator, lhs, rhs } => match operator {
-                BinOp::Add => self.eval_expr(lhs.as_ref())? + self.eval_expr(rhs.as_ref())?,
-                BinOp::Sub => self.eval_expr(lhs.as_ref())? - self.eval_expr(rhs.as_ref())?,
-                BinOp::Mul => self.eval_expr(lhs.as_ref())? * self.eval_expr(rhs.as_ref())?,
+            Expr::Binary { operator, lhs, rhs } => Value::Integer(match operator {
+                BinOp::Add => {
+                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
+                        + self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                }
+                BinOp::Sub => {
+                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
+                        - self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                }
+                BinOp::Mul => {
+                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
+                        * self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                }
                 BinOp::Div => {
-                    let left = self.eval_expr(lhs.as_ref())?;
-                    let right = self.eval_expr(rhs.as_ref())?;
+                    let left = self.eval_expr(lhs.as_ref())?.unwrap_integer()?;
+                    let right = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
 
                     match right {
                         0 => anyhow::bail!(Error::DivideByZeroError),
@@ -64,8 +81,8 @@ impl Evaluator {
                     }
                 }
                 BinOp::Pow => {
-                    let base = self.eval_expr(lhs.as_ref())?;
-                    let pow = self.eval_expr(rhs.as_ref())?;
+                    let base = self.eval_expr(lhs.as_ref())?.unwrap_integer()?;
+                    let pow = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
 
                     if pow < 0 {
                         anyhow::bail!(Error::LogicError {
@@ -75,7 +92,37 @@ impl Evaluator {
 
                     base.pow(pow as u32)
                 }
-            },
+            }),
+            Expr::Logical { operator, lhs, rhs } => Value::Bool({
+                let left = self.eval_expr(lhs.as_ref())?.unwrap_bool()?;
+                let right = self.eval_expr(rhs.as_ref())?.unwrap_bool()?;
+
+                match operator {
+                    LogOp::And => left && right,
+                    LogOp::Or => left || right,
+                }
+            }),
+            Expr::Relational { operator, lhs, rhs } => Value::Bool({
+                let left = self.eval_expr(lhs.as_ref())?;
+                let right = self.eval_expr(rhs.as_ref())?;
+
+                match (left, right) {
+                    (Value::Integer(lhs), Value::Integer(rhs)) => match operator {
+                        RelOp::Eq => lhs == rhs,
+                        RelOp::Ne => lhs != rhs,
+                        RelOp::Gt => lhs > rhs,
+                        RelOp::Lt => lhs < rhs,
+                        RelOp::Gte => lhs >= rhs,
+                        RelOp::Lte => lhs <= rhs,
+                    },
+                    (Value::Bool(lhs), Value::Bool(rhs)) => match operator {
+                        RelOp::Eq => lhs == rhs,
+                        RelOp::Ne => lhs != rhs,
+                        _ => anyhow::bail!("operation not permitted"),
+                    },
+                    _ => anyhow::bail!("comparison not permitted"),
+                }
+            }),
         })
     }
 }
@@ -121,7 +168,15 @@ mod tests {
             }])
             .unwrap();
 
-        assert_eq!(42, *evaler.env.get("foo".into()).unwrap());
+        assert_eq!(
+            42,
+            evaler
+                .env
+                .get("foo".into())
+                .unwrap()
+                .unwrap_integer()
+                .unwrap()
+        );
     }
 
     #[test]

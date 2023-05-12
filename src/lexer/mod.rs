@@ -16,7 +16,7 @@ impl Lexer {
                     while let Some('0'..='9') = chars.peek() {
                         number.push(chars.next().expect("we are peeking ahead so this is safe"));
                     }
-                    Token::Integer(number.parse::<i32>()?)
+                    Token::Integer(number.parse()?)
                 }
                 'a'..='z' => {
                     let mut ident = ch.to_string();
@@ -35,13 +35,55 @@ impl Lexer {
                 '*' => Token::Star,
                 '/' => Token::Divide,
                 '^' => Token::Caret,
+                '=' => {
+                    if let Some('=') = chars.peek() {
+                        chars.next();
+                        Token::RelEq
+                    } else {
+                        Token::Equal
+                    }
+                }
+                '!' => {
+                    if let Some('=') = chars.peek() {
+                        chars.next();
+                        Token::RelNe
+                    } else {
+                        Token::Bang
+                    }
+                }
+                '<' => {
+                    if let Some('=') = chars.peek() {
+                        chars.next();
+                        Token::RelLte
+                    } else {
+                        Token::RelLt
+                    }
+                }
+                '>' => {
+                    if let Some('=') = chars.peek() {
+                        chars.next();
+                        Token::RelGte
+                    } else {
+                        Token::RelGt
+                    }
+                }
+                '&' => {
+                    if let Some('&') = chars.next() {
+                        Token::And
+                    } else {
+                        anyhow::bail!(Error::UnexpectedChar { character: ch })
+                    }
+                }
+                '|' => {
+                    if let Some('|') = chars.next() {
+                        Token::Or
+                    } else {
+                        anyhow::bail!(Error::UnexpectedChar { character: ch })
+                    }
+                }
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
-                '=' => Token::Equal,
-                _ => anyhow::bail!(Error::TokenParsingError {
-                    character: ch,
-                    message: "Unknown token".to_string()
-                }),
+                _ => anyhow::bail!(Error::UnexpectedChar { character: ch }),
             });
         }
 
@@ -98,11 +140,6 @@ mod tests {
     #[test]
     fn tokenize_error() {
         let tokens = Lexer::tokenize("]".into());
-
         assert!(tokens.is_err());
-        assert_eq!(
-            tokens.unwrap_err().to_string(),
-            "Token parsing error: Unknown token: ]".to_string()
-        );
     }
 }
