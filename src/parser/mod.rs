@@ -65,7 +65,6 @@ impl<'a> Parser<'a> {
     fn parse_or(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_and()?;
 
-        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current()?;
             match operator {
@@ -90,7 +89,6 @@ impl<'a> Parser<'a> {
     fn parse_and(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_rel()?;
 
-        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current()?;
             match operator {
@@ -112,11 +110,9 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    /// Recursively parse an expression
     fn parse_rel(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_expr()?;
 
-        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current()?;
             match operator {
@@ -143,11 +139,9 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    /// Recursively parse an expression
     fn parse_expr(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_mult()?;
 
-        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current()?;
             match operator {
@@ -169,11 +163,9 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    /// Recursively parse a term
     fn parse_mult(&mut self) -> anyhow::Result<Expr> {
         let mut lhs = self.parse_pow()?;
 
-        // Ensure left-associativity by expanding LHS as long as there is another operation
         while self.has_more_tokens() {
             let operator = self.clone_current()?;
             match operator {
@@ -195,7 +187,6 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    /// Recursively parse an exponentiation
     fn parse_pow(&mut self) -> anyhow::Result<Expr> {
         let lhs = self.parse_unary()?;
 
@@ -220,7 +211,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parse a single factor
     fn parse_unary(&mut self) -> anyhow::Result<Expr> {
         let token = self.clone_current()?;
         Ok(match token {
