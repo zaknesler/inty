@@ -52,14 +52,95 @@ impl<'a> Parser<'a> {
 
                     Ok(Stmt::Let {
                         ident,
-                        expr: self.parse_expr()?,
+                        expr: self.parse_or()?,
                     })
                 } else {
                     anyhow::bail!("Expected identifier");
                 }
             }
-            _ => Ok(Stmt::Expr(self.parse_expr()?)),
+            _ => Ok(Stmt::Expr(self.parse_or()?)),
         }
+    }
+
+    fn parse_or(&mut self) -> anyhow::Result<Expr> {
+        let mut lhs = self.parse_and()?;
+
+        // Ensure left-associativity by expanding LHS as long as there is another operation
+        while self.has_more_tokens() {
+            let operator = self.clone_current()?;
+            match operator {
+                Token::Or => {
+                    self.advance();
+                    let rhs = self.parse_and()?;
+
+                    lhs = Expr::Logical {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
+                _ => break,
+            }
+        }
+
+        Ok(lhs)
+    }
+
+    fn parse_and(&mut self) -> anyhow::Result<Expr> {
+        let mut lhs = self.parse_rel()?;
+
+        // Ensure left-associativity by expanding LHS as long as there is another operation
+        while self.has_more_tokens() {
+            let operator = self.clone_current()?;
+            match operator {
+                Token::And => {
+                    self.advance();
+                    let rhs = self.parse_rel()?;
+
+                    lhs = Expr::Logical {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
+                _ => break,
+            }
+        }
+
+        Ok(lhs)
+    }
+
+    /// Recursively parse an expression
+    fn parse_rel(&mut self) -> anyhow::Result<Expr> {
+        let mut lhs = self.parse_expr()?;
+
+        // Ensure left-associativity by expanding LHS as long as there is another operation
+        while self.has_more_tokens() {
+            let operator = self.clone_current()?;
+            match operator {
+                Token::RelEq
+                | Token::RelNe
+                | Token::RelGt
+                | Token::RelLt
+                | Token::RelGte
+                | Token::RelLte => {
+                    self.advance();
+                    let rhs = self.parse_expr()?;
+
+                    lhs = Expr::Relational {
+                        operator: operator.into(),
+                        lhs: Rc::new(lhs),
+                        rhs: Rc::new(rhs),
+                    };
+                }
+
+                _ => break,
+            }
+        }
+
+        Ok(lhs)
     }
 
     /// Recursively parse an expression
@@ -75,33 +156,6 @@ impl<'a> Parser<'a> {
                     let rhs = self.parse_mult()?;
 
                     lhs = Expr::Binary {
-                        operator: operator.into(),
-                        lhs: Rc::new(lhs),
-                        rhs: Rc::new(rhs),
-                    };
-                }
-
-                Token::And | Token::Or => {
-                    self.advance();
-                    let rhs = self.parse_mult()?;
-
-                    lhs = Expr::Logical {
-                        operator: operator.into(),
-                        lhs: Rc::new(lhs),
-                        rhs: Rc::new(rhs),
-                    };
-                }
-
-                Token::RelEq
-                | Token::RelNe
-                | Token::RelGt
-                | Token::RelLt
-                | Token::RelGte
-                | Token::RelLte => {
-                    self.advance();
-                    let rhs = self.parse_mult()?;
-
-                    lhs = Expr::Relational {
                         operator: operator.into(),
                         lhs: Rc::new(lhs),
                         rhs: Rc::new(rhs),
@@ -218,7 +272,7 @@ impl<'a> Parser<'a> {
                     });
                 }
 
-                let expr = self.parse_expr()?;
+                let expr = self.parse_or()?;
                 self.consume(Token::RightParen)?;
 
                 expr
@@ -506,17 +560,17 @@ mod tests {
     fn parsing_logical_or_and_expression() {
         assert_eq!(
             vec![Stmt::Expr(Expr::Logical {
-                operator: LogOp::And,
+                operator: LogOp::Or,
                 lhs: Rc::new(Expr::Logical {
                     operator: LogOp::Or,
                     lhs: Rc::new(Expr::Bool(true)),
-                    rhs: Rc::new(Expr::Bool(false)),
+                    rhs: Rc::new(Expr::Logical {
+                        operator: LogOp::And,
+                        lhs: Rc::new(Expr::Bool(false)),
+                        rhs: Rc::new(Expr::Bool(false)),
+                    }),
                 }),
-                rhs: Rc::new(Expr::Logical {
-                    operator: LogOp::Or,
-                    lhs: Rc::new(Expr::Bool(false)),
-                    rhs: Rc::new(Expr::Bool(true)),
-                }),
+                rhs: Rc::new(Expr::Bool(true)),
             })],
             Parser::new(&vec![
                 Token::True,
