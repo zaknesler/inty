@@ -83,6 +83,8 @@ impl Lexer {
                 }
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
+                '{' => Token::LeftBrace,
+                '}' => Token::RightBrace,
                 _ => anyhow::bail!(Error::UnexpectedChar { character: ch }),
             });
         }

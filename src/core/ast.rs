@@ -9,6 +9,9 @@ pub enum Stmt {
 
     /// A single expression
     Expr(Expr),
+
+    /// A group of statements (e.g. `{ let x = 1; x + 2 }`)
+    Block(Vec<Stmt>),
 }
 
 /// Internal values for evaluation

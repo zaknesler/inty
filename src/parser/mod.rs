@@ -58,6 +58,33 @@ impl<'a> Parser<'a> {
                     anyhow::bail!("Expected identifier");
                 }
             }
+
+            Token::LeftBrace => {
+                self.advance();
+
+                if !self.has_more_tokens() {
+                    anyhow::bail!(Error::SyntaxError {
+                        token: None,
+                        message: "Expected right brace".to_string()
+                    });
+                }
+
+                let mut stmts = vec![self.parse_statement()?];
+
+                while let Some(next) = self.peek() {
+                    if next == &Token::Semicolon {
+                        self.advance();
+                        stmts.push(self.parse_statement()?);
+                    } else {
+                        break;
+                    }
+                }
+
+                self.consume(Token::RightBrace)?;
+
+                Ok(Stmt::Block(stmts))
+            }
+
             _ => Ok(Stmt::Expr(self.parse_or()?)),
         }
     }
@@ -285,6 +312,14 @@ impl<'a> Parser<'a> {
         }
 
         Ok(self.tokens[self.position].clone())
+    }
+
+    fn peek(&self) -> Option<&Token> {
+        if !self.has_more_tokens() {
+            None
+        } else {
+            Some(&self.tokens[self.position])
+        }
     }
 
     /// Move onto the next token

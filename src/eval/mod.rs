@@ -30,8 +30,19 @@ impl Evaluator {
             Stmt::Expr(expr) => Some(self.eval_expr(&expr)?),
             Stmt::Let { ident, expr } => {
                 self.env.put(ident.clone(), self.eval_expr(expr)?);
-
                 None
+            }
+            Stmt::Block(stmts) => {
+                if let Some(val) = stmts
+                    .iter()
+                    .map(|stmt| self.eval_stmt(stmt))
+                    .collect::<Vec<_>>()
+                    .pop()
+                {
+                    val?
+                } else {
+                    anyhow::bail!("block contained no return value")
+                }
             }
         })
     }
@@ -46,6 +57,7 @@ impl Evaluator {
                     ident: ident.clone()
                 }),
             },
+
             Expr::Bool(val) => Value::Bool(*val),
             Expr::Unary { operator, value } => match operator {
                 UnOp::Minus => {
