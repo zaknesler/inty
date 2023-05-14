@@ -7,6 +7,8 @@ pub enum Token {
     Ident(String),
 
     // Keywords
+    If,
+    Else,
     Let,
     True,
     False,
@@ -49,6 +51,8 @@ impl Display for Token {
             Token::Ident(value) => write!(f, "{}", value),
 
             // Keywords
+            Token::If => write!(f, "if"),
+            Token::Else => write!(f, "else"),
             Token::Let => write!(f, "let"),
             Token::True => write!(f, "true"),
             Token::False => write!(f, "false"),
@@ -90,6 +94,8 @@ impl Token {
     /// Attempt to map a reserved keyword to its token
     pub fn map_keyword(text: &str) -> Option<Self> {
         Some(match text {
+            "if" => Token::If,
+            "else" => Token::Else,
             "let" => Token::Let,
             "true" => Token::True,
             "false" => Token::False,

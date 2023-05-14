@@ -19,7 +19,7 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
 
         while self.has_more_tokens() {
-            let statement = self.parse_statement()?;
+            let statement = self.parse_stmt()?;
             statements.push(statement);
 
             // Check for semicolon to separate statements
@@ -42,18 +42,39 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a single statement
-    fn parse_statement(&mut self) -> anyhow::Result<Stmt> {
-        match self.clone_current()? {
+    fn parse_stmt(&mut self) -> anyhow::Result<Stmt> {
+        Ok(match self.clone_current()? {
+            Token::If => {
+                self.advance();
+
+                let test = self.parse_or()?;
+                let block = Rc::new(self.parse_stmt()?);
+
+                let else_block = match self.peek() {
+                    Some(Token::Else) => {
+                        self.advance();
+                        Some(Rc::new(self.parse_stmt()?))
+                    }
+                    _ => None,
+                };
+
+                Stmt::If {
+                    test,
+                    block,
+                    else_block,
+                }
+            }
+
             Token::Let => {
                 self.advance();
                 if let Token::Ident(ident) = self.clone_current()? {
                     self.advance();
                     self.consume(Token::Equal)?;
 
-                    Ok(Stmt::Let {
+                    Stmt::Let {
                         ident,
                         expr: self.parse_or()?,
-                    })
+                    }
                 } else {
                     anyhow::bail!("Expected identifier");
                 }
@@ -69,12 +90,12 @@ impl<'a> Parser<'a> {
                     });
                 }
 
-                let mut stmts = vec![self.parse_statement()?];
+                let mut stmts = vec![self.parse_stmt()?];
 
                 while let Some(next) = self.peek() {
                     if next == &Token::Semicolon {
                         self.advance();
-                        stmts.push(self.parse_statement()?);
+                        stmts.push(self.parse_stmt()?);
                     } else {
                         break;
                     }
@@ -82,11 +103,11 @@ impl<'a> Parser<'a> {
 
                 self.consume(Token::RightBrace)?;
 
-                Ok(Stmt::Block(stmts))
+                Stmt::Block(stmts)
             }
 
-            _ => Ok(Stmt::Expr(self.parse_or()?)),
-        }
+            _ => Stmt::Expr(self.parse_or()?),
+        })
     }
 
     fn parse_or(&mut self) -> anyhow::Result<Expr> {

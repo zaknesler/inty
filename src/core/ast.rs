@@ -4,6 +4,13 @@ use std::{fmt::Display, rc::Rc};
 /// A statement can be an operation upon an expression, or just a single expression
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
+    /// An if statement (e.g. `if <expr> <stmt> [<else> <stmt>]`)
+    If {
+        test: Expr,
+        block: Rc<Stmt>,
+        else_block: Option<Rc<Stmt>>,
+    },
+
     /// A let statement (e.g. `let x = 10;`)
     Let { ident: String, expr: Expr },
 
@@ -160,6 +167,7 @@ impl Value {
     pub fn unwrap_bool(&self) -> anyhow::Result<bool> {
         match self {
             Value::Bool(val) => Ok(*val),
+            // Value::Integer(val) => Ok(*val > 1),
             _ => anyhow::bail!("{} is not a boolean", self),
         }
     }

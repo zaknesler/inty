@@ -154,6 +154,9 @@ mod tests {
             ("false || true || false", Value::Bool(true)),
             ("true && (false || true)", Value::Bool(true)),
             ("(true && false) || true", Value::Bool(true)),
+            ("(true && false) || true", Value::Bool(true)),
+            ("if true 1 else 2", Value::Integer(1)),
+            ("if !true 1 else 2", Value::Integer(2)),
         ]
         .into_iter()
         .enumerate()

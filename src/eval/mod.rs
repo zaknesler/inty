@@ -28,6 +28,19 @@ impl Evaluator {
     fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Option<Value>> {
         Ok(match stmt {
             Stmt::Expr(expr) => Some(self.eval_expr(&expr)?),
+            Stmt::If {
+                test,
+                block,
+                else_block,
+            } => {
+                if self.eval_expr(test)?.unwrap_bool()? {
+                    self.eval_stmt(block)?
+                } else if let Some(else_block) = else_block {
+                    self.eval_stmt(else_block)?
+                } else {
+                    None
+                }
+            }
             Stmt::Let { ident, expr } => {
                 self.env.put(ident.clone(), self.eval_expr(expr)?);
                 None
