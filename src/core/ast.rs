@@ -14,11 +14,11 @@ pub enum Stmt {
     /// A let statement (e.g. `let x = 10;`)
     Let { ident: String, expr: Expr },
 
-    /// A single expression
-    Expr(Expr),
-
     /// A group of statements (e.g. `{ let x = 1; x + 2 }`)
     Block(Vec<Stmt>),
+
+    /// A single expression
+    Expr(Expr),
 }
 
 /// Internal values for evaluation
