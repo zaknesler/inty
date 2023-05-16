@@ -30,8 +30,8 @@ impl Evaluator {
             Stmt::Expr(expr) => Some(self.eval_expr(&expr)?),
             Stmt::If {
                 test,
-                block,
-                else_block,
+                branch: block,
+                else_branch: else_block,
             } => {
                 if self.eval_expr(test)?.unwrap_bool()? {
                     self.eval_stmt(block)?
@@ -70,7 +70,6 @@ impl Evaluator {
                     ident: ident.clone()
                 }),
             },
-
             Expr::Bool(val) => Value::Bool(*val),
             Expr::Unary { operator, value } => match operator {
                 UnOp::Minus => {

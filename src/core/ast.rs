@@ -7,8 +7,8 @@ pub enum Stmt {
     /// An if statement (e.g. `if <expr> <stmt> [<else> <stmt>]`)
     If {
         test: Expr,
-        block: Rc<Stmt>,
-        else_block: Option<Rc<Stmt>>,
+        branch: Rc<Stmt>,
+        else_branch: Option<Rc<Stmt>>,
     },
 
     /// A let statement (e.g. `let x = 10;`)

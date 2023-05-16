@@ -47,21 +47,16 @@ impl<'a> Parser<'a> {
             Token::If => {
                 self.advance();
 
-                let test = self.parse_or()?;
-                let block = Rc::new(self.parse_stmt()?);
-
-                let else_block = match self.peek() {
-                    Some(Token::Else) => {
-                        self.advance();
-                        Some(Rc::new(self.parse_stmt()?))
-                    }
-                    _ => None,
-                };
-
                 Stmt::If {
-                    test,
-                    block,
-                    else_block,
+                    test: self.parse_or()?,
+                    branch: Rc::new(self.parse_stmt()?),
+                    else_branch: match self.peek() {
+                        Some(Token::Else) => {
+                            self.advance();
+                            Some(Rc::new(self.parse_stmt()?))
+                        }
+                        _ => None,
+                    },
                 }
             }
 
