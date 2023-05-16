@@ -2,13 +2,13 @@ use crate::core::*;
 use std::collections::HashMap;
 
 pub struct Environment {
-    table: Box<HashMap<String, Value>>,
+    table: HashMap<String, Value>,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Self {
-            table: Box::new(HashMap::new()),
+            table: HashMap::new(),
         }
     }
 
