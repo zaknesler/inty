@@ -166,7 +166,6 @@ mod tests {
             ("9 <= 10", Value::Bool(true)),
             ("9 > 10", Value::Bool(false)),
             ("9 >= 10", Value::Bool(false)),
-            ("9 >= 10", Value::Bool(false)),
             ("if true 1 else 2", Value::Integer(1)),
             ("if !true 1 else 2", Value::Integer(2)),
         ]
