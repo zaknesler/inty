@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn tokenize_error() {
-        let tokens = Lexer::tokenize("]".into());
+        let tokens = Lexer::tokenize("?".into());
         assert!(tokens.is_err());
     }
 }
