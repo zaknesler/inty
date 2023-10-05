@@ -10,7 +10,6 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 rustyline = "12"
 thiserror = "1"
