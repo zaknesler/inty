@@ -15,7 +15,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a list of tokens into an AST
-    pub fn parse(&mut self) -> anyhow::Result<Vec<Stmt>> {
+    pub fn parse(&mut self) -> IntyResult<Vec<Stmt>> {
         let mut statements = Vec::new();
 
         while self.has_more_tokens() {
@@ -33,16 +33,16 @@ impl<'a> Parser<'a> {
         // If there are more tokens remaining after a successful parse, they must be invalid.
         // e.g. "2 + 3 4 + 5" will not have parsed "4 + 5"
         if self.has_more_tokens() {
-            anyhow::bail!(Error::InvalidExpressionError {
-                message: "Tokens remaining after parsing".to_string()
-            })
+            return Err(IntyError::InvalidExpressionError {
+                message: "Tokens remaining after parsing",
+            });
         }
 
         Ok(statements)
     }
 
     /// Parse a single statement
-    fn parse_stmt(&mut self) -> anyhow::Result<Stmt> {
+    fn parse_stmt(&mut self) -> IntyResult<Stmt> {
         Ok(match self.clone_current()? {
             Token::If => {
                 self.advance();
@@ -71,7 +71,10 @@ impl<'a> Parser<'a> {
                         expr: self.parse_or()?,
                     }
                 } else {
-                    anyhow::bail!("Expected identifier");
+                    return Err(IntyError::SyntaxError {
+                        token: None,
+                        message: "expected identifier",
+                    });
                 }
             }
 
@@ -79,9 +82,9 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 if !self.has_more_tokens() {
-                    anyhow::bail!(Error::SyntaxError {
+                    return Err(IntyError::SyntaxError {
                         token: None,
-                        message: "Expected right brace".to_string()
+                        message: "Expected right brace",
                     });
                 }
 
@@ -105,7 +108,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_or(&mut self) -> anyhow::Result<Expr> {
+    fn parse_or(&mut self) -> IntyResult<Expr> {
         let mut lhs = self.parse_and()?;
 
         while self.has_more_tokens() {
@@ -129,7 +132,7 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn parse_and(&mut self) -> anyhow::Result<Expr> {
+    fn parse_and(&mut self) -> IntyResult<Expr> {
         let mut lhs = self.parse_rel()?;
 
         while self.has_more_tokens() {
@@ -153,7 +156,7 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn parse_rel(&mut self) -> anyhow::Result<Expr> {
+    fn parse_rel(&mut self) -> IntyResult<Expr> {
         let mut lhs = self.parse_expr()?;
 
         while self.has_more_tokens() {
@@ -182,7 +185,7 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn parse_expr(&mut self) -> anyhow::Result<Expr> {
+    fn parse_expr(&mut self) -> IntyResult<Expr> {
         let mut lhs = self.parse_mult()?;
 
         while self.has_more_tokens() {
@@ -206,7 +209,7 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn parse_mult(&mut self) -> anyhow::Result<Expr> {
+    fn parse_mult(&mut self) -> IntyResult<Expr> {
         let mut lhs = self.parse_pow()?;
 
         while self.has_more_tokens() {
@@ -230,7 +233,7 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn parse_pow(&mut self) -> anyhow::Result<Expr> {
+    fn parse_pow(&mut self) -> IntyResult<Expr> {
         let lhs = self.parse_unary()?;
 
         if !self.has_more_tokens() {
@@ -254,7 +257,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_unary(&mut self) -> anyhow::Result<Expr> {
+    fn parse_unary(&mut self) -> IntyResult<Expr> {
         let token = self.clone_current()?;
         Ok(match token {
             Token::Integer(value) => {
@@ -299,9 +302,9 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 if !self.has_more_tokens() {
-                    anyhow::bail!(Error::SyntaxError {
+                    return Err(IntyError::SyntaxError {
                         token: None,
-                        message: "Expected right parenthesis".to_string()
+                        message: "Expected right parenthesis",
                     });
                 }
 
@@ -311,20 +314,22 @@ impl<'a> Parser<'a> {
                 expr
             }
 
-            _ => anyhow::bail!(Error::SyntaxError {
-                token: Some(token),
-                message: "Unexpected token".to_string()
-            }),
+            _ => {
+                return Err(IntyError::SyntaxError {
+                    token: Some(token),
+                    message: "Unexpected token",
+                })
+            }
         })
     }
 
     /// Get a cloned instance of the current token
-    fn clone_current(&self) -> anyhow::Result<Token> {
+    fn clone_current(&self) -> IntyResult<Token> {
         if !self.has_more_tokens() {
-            anyhow::bail!(Error::SyntaxError {
+            return Err(IntyError::SyntaxError {
                 token: Some(self.tokens[self.position - 1].clone()),
-                message: "Unexpected token".to_string()
-            })
+                message: "Unexpected token",
+            });
         }
 
         Ok(self.tokens[self.position].clone())
@@ -349,7 +354,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Match the current token to the expected token, error otherwise
-    fn consume(&mut self, expected: Token) -> anyhow::Result<Token> {
+    fn consume(&mut self, expected: Token) -> IntyResult<Token> {
         let found = self.clone_current()?;
 
         if expected == found {
@@ -357,7 +362,7 @@ impl<'a> Parser<'a> {
             return Ok(found);
         }
 
-        anyhow::bail!(Error::ExpectedTokenError { expected, found })
+        return Err(IntyError::ExpectedTokenError { expected, found });
     }
 }
 
