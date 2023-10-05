@@ -5,15 +5,15 @@ pub type IntyResult<T> = Result<T, IntyError>;
 #[derive(thiserror::Error, Debug)]
 pub enum IntyError {
     #[error("syntax error: {message}")]
-    SyntaxError {
-        token: Option<Token>,
-        message: String,
-    },
+    SyntaxError { message: String },
+
+    #[error("syntax error: {message} {token}")]
+    SyntaxTokenError { token: Token, message: String },
 
     #[error("unexpected character: {character}")]
     UnexpectedChar { character: char },
 
-    #[error("could not parse token: {character}: {message}")]
+    #[error("could not parse token {character}: {message}")]
     TokenParsingError { character: char, message: String },
 
     #[error("expected {expected}, found {found}")]

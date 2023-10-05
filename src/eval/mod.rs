@@ -68,7 +68,6 @@ impl Evaluator {
                     val?
                 } else {
                     return Err(IntyError::SyntaxError {
-                        token: None,
                         message: "block contained no return value".to_string(),
                     });
                 }
@@ -136,7 +135,7 @@ impl Evaluator {
 
                     if pow < 0 {
                         return Err(IntyError::LogicError {
-                            message: "power must be non-negative integer".to_string(),
+                            message: "power must be a non-negative integer".to_string(),
                         });
                     }
 
@@ -170,15 +169,22 @@ impl Evaluator {
                         RelOp::Ne => lhs != rhs,
                         _ => {
                             return Err(IntyError::SyntaxError {
-                                token: None,
-                                message: "invalid operation".to_string(),
+                                message: "operation not permitted".to_string(),
+                            })
+                        }
+                    },
+                    (Value::List(lhs), Value::List(rhs)) => match operator {
+                        RelOp::Eq => lhs == rhs,
+                        RelOp::Ne => lhs != rhs,
+                        _ => {
+                            return Err(IntyError::SyntaxError {
+                                message: "operation not permitted".to_string(),
                             })
                         }
                     },
                     _ => {
                         return Err(IntyError::SyntaxError {
-                            token: None,
-                            message: "invalid comparison".to_string(),
+                            message: "comparison not permitted".to_string(),
                         })
                     }
                 }

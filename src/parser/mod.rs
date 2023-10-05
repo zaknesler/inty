@@ -72,7 +72,6 @@ impl<'a> Parser<'a> {
                     }
                 } else {
                     return Err(IntyError::SyntaxError {
-                        token: None,
                         message: "expected identifier".to_string(),
                     });
                 }
@@ -83,7 +82,6 @@ impl<'a> Parser<'a> {
 
                 if !self.has_more_tokens() {
                     return Err(IntyError::SyntaxError {
-                        token: None,
                         message: "expected right brace".to_string(),
                     });
                 }
@@ -303,7 +301,6 @@ impl<'a> Parser<'a> {
 
                 if !self.has_more_tokens() {
                     return Err(IntyError::SyntaxError {
-                        token: None,
                         message: "expected right parenthesis".to_string(),
                     });
                 }
@@ -319,7 +316,6 @@ impl<'a> Parser<'a> {
 
                 if !self.has_more_tokens() {
                     return Err(IntyError::SyntaxError {
-                        token: None,
                         message: "expected right bracket".to_string(),
                     });
                 }
@@ -340,8 +336,8 @@ impl<'a> Parser<'a> {
             }
 
             _ => {
-                return Err(IntyError::SyntaxError {
-                    token: Some(token),
+                return Err(IntyError::SyntaxTokenError {
+                    token,
                     message: "unexpected token".to_string(),
                 })
             }
@@ -351,8 +347,8 @@ impl<'a> Parser<'a> {
     /// Get a cloned instance of the current token
     fn clone_current(&self) -> IntyResult<Token> {
         if !self.has_more_tokens() {
-            return Err(IntyError::SyntaxError {
-                token: Some(self.tokens[self.position - 1].clone()),
+            return Err(IntyError::SyntaxTokenError {
+                token: self.tokens[self.position - 1].clone(),
                 message: "unexpected token".to_string(),
             });
         }
