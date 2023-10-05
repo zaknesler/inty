@@ -7,35 +7,32 @@ pub enum IntyError {
     #[error("syntax error: {message}")]
     SyntaxError {
         token: Option<Token>,
-        message: &'static str,
+        message: String,
     },
 
     #[error("unexpected character: {character}")]
     UnexpectedChar { character: char },
 
     #[error("could not parse token: {character}: {message}")]
-    TokenParsingError {
-        character: char,
-        message: &'static str,
-    },
+    TokenParsingError { character: char, message: String },
 
     #[error("expected {expected}, found {found}")]
     ExpectedTokenError { expected: Token, found: Token },
 
     #[error("logic error: {message}")]
-    LogicError { message: &'static str },
+    LogicError { message: String },
 
     #[error("cannot divide by zero")]
     DivideByZeroError,
 
     #[error("invalid expression: {message}")]
-    InvalidExpressionError { message: &'static str },
+    InvalidExpressionError { message: String },
 
     #[error("unknown identifier: {ident}")]
-    UnknownIdentifier { ident: &'static str },
+    UnknownIdentifier { ident: String },
 
     #[error("type error: {message}")]
-    TypeError { message: &'static str },
+    TypeError { message: String },
 
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),

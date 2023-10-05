@@ -24,7 +24,7 @@ impl Value {
             Value::Integer(val) => Ok(*val),
             _ => {
                 return Err(super::IntyError::TypeError {
-                    message: format!("{} is not an integer", self).as_ref(),
+                    message: format!("{} is not an integer", self),
                 })
             }
         }

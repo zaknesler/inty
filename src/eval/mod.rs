@@ -56,7 +56,7 @@ impl Evaluator {
                 } else {
                     return Err(IntyError::SyntaxError {
                         token: None,
-                        message: "block contained no return value",
+                        message: "block contained no return value".to_string(),
                     });
                 }
             }
@@ -71,7 +71,7 @@ impl Evaluator {
                 Some(val) => val.clone(),
                 None => {
                     return Err(IntyError::UnknownIdentifier {
-                        ident: ident.clone().as_ref(),
+                        ident: ident.clone(),
                     })
                 }
             },
@@ -82,7 +82,7 @@ impl Evaluator {
                         Value::Integer(-1 * value)
                     } else {
                         return Err(IntyError::TypeError {
-                            message: "expected integer",
+                            message: "expected integer".to_string(),
                         });
                     }
                 }
@@ -117,7 +117,7 @@ impl Evaluator {
 
                     if pow < 0 {
                         return Err(IntyError::LogicError {
-                            message: "power must be non-negative integer",
+                            message: "power must be non-negative integer".to_string(),
                         });
                     }
 
@@ -152,14 +152,14 @@ impl Evaluator {
                         _ => {
                             return Err(IntyError::SyntaxError {
                                 token: None,
-                                message: "invalid operation",
+                                message: "invalid operation".to_string(),
                             })
                         }
                     },
                     _ => {
                         return Err(IntyError::SyntaxError {
                             token: None,
-                            message: "invalid comparison",
+                            message: "invalid comparison".to_string(),
                         })
                     }
                 }
