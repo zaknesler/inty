@@ -356,12 +356,9 @@ impl<'a> Parser<'a> {
         Ok(self.tokens[self.position].clone())
     }
 
+    /// Get the next token if it exists, but do not advance
     fn peek(&self) -> Option<&Token> {
-        if !self.has_more_tokens() {
-            None
-        } else {
-            Some(&self.tokens[self.position])
-        }
+        self.has_more_tokens().then(|| &self.tokens[self.position])
     }
 
     /// Move onto the next token
