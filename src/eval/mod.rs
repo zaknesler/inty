@@ -89,6 +89,12 @@ impl Evaluator {
                 }
             },
             Expr::Bool(val) => Value::Bool(*val),
+            Expr::List(exprs) => Value::List(
+                exprs
+                    .into_iter()
+                    .map(|expr| self.eval_expr(expr))
+                    .collect::<IntyResult<Vec<_>>>()?,
+            ),
             Expr::Unary { operator, value } => match operator {
                 UnOp::Minus => {
                     if let Value::Integer(value) = self.eval_expr(value)? {

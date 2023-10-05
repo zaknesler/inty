@@ -314,6 +314,32 @@ impl<'a> Parser<'a> {
                 expr
             }
 
+            Token::LeftBracket => {
+                self.advance();
+
+                if !self.has_more_tokens() {
+                    return Err(IntyError::SyntaxError {
+                        token: None,
+                        message: "expected right bracket".to_string(),
+                    });
+                }
+
+                let mut values = Vec::new();
+
+                while let Some(next) = self.peek() {
+                    if next == &Token::Comma {
+                        self.advance();
+                        values.push(self.parse_or()?);
+                    } else {
+                        break;
+                    }
+                }
+
+                self.consume(Token::RightBracket)?;
+
+                Expr::List(values)
+            }
+
             _ => {
                 return Err(IntyError::SyntaxError {
                     token: Some(token),
