@@ -97,7 +97,6 @@ mod tests {
 
     #[test]
     fn expression_evaluation() {
-        let start = line!() + 2;
         [
             ("1", Value::Integer(1)),
             ("1 + 2 + 3", Value::Integer(6)),
@@ -171,20 +170,33 @@ mod tests {
             ("{ let x = 1; x }", Value::Integer(1)),
             ("{ let x = 1; let x = 2; x }", Value::Integer(2)),
             ("{ let x = 1; { let x = 2 }; x }", Value::Integer(1)),
+            ("[]", Value::List(vec![])),
+            ("[1]", Value::List(vec![Value::Integer(1)])),
+            ("[1,]", Value::List(vec![Value::Integer(1)])),
+            (
+                "[1,2]",
+                Value::List(vec![Value::Integer(1), Value::Integer(2)]),
+            ),
+            (
+                "[1,2,]",
+                Value::List(vec![Value::Integer(1), Value::Integer(2)]),
+            ),
+            (
+                "[0,false,!true,true&&false]",
+                Value::List(vec![
+                    Value::Integer(0),
+                    Value::Bool(false),
+                    Value::Bool(false),
+                    Value::Bool(false),
+                ]),
+            ),
         ]
         .into_iter()
-        .enumerate()
-        .for_each(|(index, (string, val))| {
+        .for_each(|(string, val)| {
             let mut eval = Evaluator::new();
             let results = process_string(&mut eval, string.to_string(), false).unwrap();
 
-            assert_eq!(
-                results[0],
-                Some(val),
-                "expression = \"{}\" (line {})",
-                string,
-                start + (index as u32)
-            );
+            assert_eq!(results[0], Some(val), "expression = \"{}\"", string,);
         })
     }
 
