@@ -11,6 +11,9 @@ pub enum Expr {
     /// Boolean value (e.g. true/false)
     Bool(bool),
 
+    /// Boolean value (e.g. true/false)
+    List(Vec<Expr>),
+
     /// A variable (e.g. `x`)
     Ident(String),
 

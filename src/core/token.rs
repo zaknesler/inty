@@ -35,12 +35,15 @@ pub enum Token {
     // Brackets
     LeftParen,
     RightParen,
+    LeftBracket,
+    RightBracket,
     LeftBrace,
     RightBrace,
 
     // Misc
     Bang,
     Equal,
+    Comma,
     Semicolon,
 }
 
@@ -79,13 +82,16 @@ impl Display for Token {
             // Brackets
             Token::LeftParen => write!(f, "("),
             Token::RightParen => write!(f, ")"),
+            Token::LeftBracket => write!(f, "["),
+            Token::RightBracket => write!(f, "]"),
             Token::LeftBrace => write!(f, "{{"),
             Token::RightBrace => write!(f, "}}"),
 
             // Misc
             Token::Bang => write!(f, "!"),
-            Token::Semicolon => write!(f, ";"),
             Token::Equal => write!(f, "="),
+            Token::Comma => write!(f, ","),
+            Token::Semicolon => write!(f, ";"),
         }
     }
 }

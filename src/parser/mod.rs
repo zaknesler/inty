@@ -314,6 +314,31 @@ impl<'a> Parser<'a> {
                 expr
             }
 
+            Token::LeftBracket => {
+                self.advance();
+
+                if !self.has_more_tokens() {
+                    return Err(IntyError::SyntaxError {
+                        token: None,
+                        message: "expected right bracket".to_string(),
+                    });
+                }
+
+                let mut values = Vec::new();
+
+                while let Some(next) = self.peek() {
+                    match &next {
+                        Token::Comma => self.advance(),
+                        Token::RightBracket => break,
+                        _ => values.push(self.parse_or()?),
+                    }
+                }
+
+                self.consume(Token::RightBracket)?;
+
+                Expr::List(values)
+            }
+
             _ => {
                 return Err(IntyError::SyntaxError {
                     token: Some(token),
@@ -626,6 +651,28 @@ mod tests {
                 Token::False,
                 Token::Or,
                 Token::True,
+            ])
+            .parse()
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn parsing_arrays() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::List(vec![
+                Expr::Integer(1),
+                Expr::Integer(2),
+                Expr::Integer(3)
+            ]))],
+            Parser::new(&vec![
+                Token::LeftBracket,
+                Token::Integer(1),
+                Token::Comma,
+                Token::Integer(2),
+                Token::Comma,
+                Token::Integer(3),
+                Token::RightBracket,
             ])
             .parse()
             .unwrap()

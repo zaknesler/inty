@@ -29,7 +29,6 @@ impl Lexer {
                         None => Token::Ident(ident),
                     }
                 }
-                ';' => Token::Semicolon,
                 '+' => Token::Plus,
                 '-' => Token::Hyphen,
                 '*' => Token::Star,
@@ -83,8 +82,12 @@ impl Lexer {
                 }
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
+                '[' => Token::LeftBracket,
+                ']' => Token::RightBracket,
                 '{' => Token::LeftBrace,
                 '}' => Token::RightBrace,
+                ';' => Token::Semicolon,
+                ',' => Token::Comma,
                 _ => return Err(IntyError::UnexpectedChar { character: ch }),
             });
         }
@@ -141,7 +144,7 @@ mod tests {
 
     #[test]
     fn tokenize_error() {
-        let tokens = Lexer::tokenize("]".into());
+        let tokens = Lexer::tokenize("?".into());
         assert!(tokens.is_err());
     }
 }

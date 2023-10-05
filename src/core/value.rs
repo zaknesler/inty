@@ -7,6 +7,7 @@ use super::IntyResult;
 pub enum Value {
     Integer(i32),
     Bool(bool),
+    List(Vec<Value>),
 }
 
 impl Display for Value {
@@ -14,6 +15,16 @@ impl Display for Value {
         match self {
             Value::Integer(val) => write!(f, "{}", val),
             Value::Bool(val) => write!(f, "{}", val),
+            Value::List(val) => {
+                write!(
+                    f,
+                    "[{}]",
+                    val.into_iter()
+                        .map(|v| v.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
         }
     }
 }
@@ -34,6 +45,11 @@ impl Value {
         match self {
             Value::Bool(val) => Ok(*val),
             Value::Integer(val) => Ok(*val > 0),
+            _ => {
+                return Err(super::IntyError::TypeError {
+                    message: format!("{} is not a boolean", self),
+                })
+            }
         }
     }
 }
