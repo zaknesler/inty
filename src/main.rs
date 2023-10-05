@@ -190,6 +190,13 @@ mod tests {
                     Value::Bool(false),
                 ]),
             ),
+            ("[] == []", Value::Bool(true)),
+            ("[1] == [1]", Value::Bool(true)),
+            ("[1,2] == [1,2]", Value::Bool(true)),
+            ("[1,2] == [1,2,3]", Value::Bool(false)),
+            ("[1,2] != [1,2,3]", Value::Bool(true)),
+            ("[1,2] != [2,1]", Value::Bool(true)),
+            ("[1*1-1+1,(2)] == [1,2*1]", Value::Bool(true)),
         ]
         .into_iter()
         .for_each(|(string, val)| {
