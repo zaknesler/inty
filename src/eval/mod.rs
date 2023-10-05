@@ -15,7 +15,7 @@ impl Evaluator {
     }
 
     /// Evaluate a program's statements into a list of values
-    pub fn eval(&mut self, stmts: Vec<Stmt>) -> anyhow::Result<Vec<Option<Value>>> {
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> IntyResult<Vec<Option<Value>>> {
         let mut results = vec![];
 
         for stmt in &stmts {
@@ -25,7 +25,7 @@ impl Evaluator {
         Ok(results)
     }
 
-    fn eval_stmt(&mut self, stmt: &Stmt) -> anyhow::Result<Option<Value>> {
+    fn eval_stmt(&mut self, stmt: &Stmt) -> IntyResult<Option<Value>> {
         Ok(match stmt {
             Stmt::Expr(expr) => Some(self.eval_expr(&expr)?),
             Stmt::If {
@@ -54,21 +54,26 @@ impl Evaluator {
                 {
                     val?
                 } else {
-                    anyhow::bail!("block contained no return value")
+                    return Err(IntyError::SyntaxError {
+                        token: None,
+                        message: "block contained no return value".to_string(),
+                    });
                 }
             }
         })
     }
 
     /// Recursively evaluate a single statement
-    fn eval_expr(&self, expr: &Expr) -> anyhow::Result<Value> {
-        Ok(match expr.clone() {
+    fn eval_expr(&self, expr: &Expr) -> IntyResult<Value> {
+        Ok(match expr {
             Expr::Integer(val) => Value::Integer(*val),
             Expr::Ident(ident) => match self.env.get(ident.clone()) {
                 Some(val) => val.clone(),
-                None => anyhow::bail!(Error::UnknownIdentifier {
-                    ident: ident.clone()
-                }),
+                None => {
+                    return Err(IntyError::UnknownIdentifier {
+                        ident: ident.clone(),
+                    })
+                }
             },
             Expr::Bool(val) => Value::Bool(*val),
             Expr::Unary { operator, value } => match operator {
@@ -76,7 +81,9 @@ impl Evaluator {
                     if let Value::Integer(value) = self.eval_expr(value)? {
                         Value::Integer(-1 * value)
                     } else {
-                        anyhow::bail!("Expected integer!")
+                        return Err(IntyError::TypeError {
+                            message: "expected integer".to_string(),
+                        });
                     }
                 }
                 UnOp::Plus => self.eval_expr(value)?,
@@ -100,7 +107,7 @@ impl Evaluator {
                     let right = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
 
                     match right {
-                        0 => anyhow::bail!(Error::DivideByZeroError),
+                        0 => return Err(IntyError::DivideByZeroError),
                         _ => left / right,
                     }
                 }
@@ -109,8 +116,8 @@ impl Evaluator {
                     let pow = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
 
                     if pow < 0 {
-                        anyhow::bail!(Error::LogicError {
-                            message: "Power must be non-negative integer".to_string()
+                        return Err(IntyError::LogicError {
+                            message: "power must be non-negative integer".to_string(),
                         });
                     }
 
@@ -142,9 +149,19 @@ impl Evaluator {
                     (Value::Bool(lhs), Value::Bool(rhs)) => match operator {
                         RelOp::Eq => lhs == rhs,
                         RelOp::Ne => lhs != rhs,
-                        _ => anyhow::bail!("operation not permitted"),
+                        _ => {
+                            return Err(IntyError::SyntaxError {
+                                token: None,
+                                message: "invalid operation".to_string(),
+                            })
+                        }
                     },
-                    _ => anyhow::bail!("comparison not permitted"),
+                    _ => {
+                        return Err(IntyError::SyntaxError {
+                            token: None,
+                            message: "invalid comparison".to_string(),
+                        })
+                    }
                 }
             }),
         })

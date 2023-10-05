@@ -13,7 +13,7 @@ use lexer::Lexer;
 use parser::Parser;
 use rustyline::{error::ReadlineError, DefaultEditor};
 
-fn main() -> anyhow::Result<()> {
+fn main() -> IntyResult<()> {
     let args = args::Args::parse();
 
     match args.command {
@@ -64,7 +64,7 @@ fn process_string(
     eval: &mut Evaluator,
     input: String,
     debug: bool,
-) -> anyhow::Result<Vec<Option<Value>>> {
+) -> IntyResult<Vec<Option<Value>>> {
     // Tokenize input
     let tokens = Lexer::tokenize(input)?;
 

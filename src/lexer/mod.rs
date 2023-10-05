@@ -4,7 +4,7 @@ pub struct Lexer {}
 
 impl Lexer {
     /// Parse a string into a vector of valid tokens
-    pub fn tokenize(input: String) -> anyhow::Result<Vec<Token>> {
+    pub fn tokenize(input: String) -> IntyResult<Vec<Token>> {
         let mut tokens = vec![];
 
         let mut chars = input.chars().peekable();
@@ -71,21 +71,21 @@ impl Lexer {
                     if let Some('&') = chars.next() {
                         Token::And
                     } else {
-                        anyhow::bail!(Error::UnexpectedChar { character: ch })
+                        return Err(IntyError::UnexpectedChar { character: ch });
                     }
                 }
                 '|' => {
                     if let Some('|') = chars.next() {
                         Token::Or
                     } else {
-                        anyhow::bail!(Error::UnexpectedChar { character: ch })
+                        return Err(IntyError::UnexpectedChar { character: ch });
                     }
                 }
                 '(' => Token::LeftParen,
                 ')' => Token::RightParen,
                 '{' => Token::LeftBrace,
                 '}' => Token::RightBrace,
-                _ => anyhow::bail!(Error::UnexpectedChar { character: ch }),
+                _ => return Err(IntyError::UnexpectedChar { character: ch }),
             });
         }
 

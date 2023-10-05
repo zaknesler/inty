@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use super::IntyResult;
+
 /// Internal values for evaluation
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
@@ -17,14 +19,18 @@ impl Display for Value {
 }
 
 impl Value {
-    pub fn unwrap_integer(&self) -> anyhow::Result<i32> {
+    pub fn unwrap_integer(&self) -> IntyResult<i32> {
         match self {
             Value::Integer(val) => Ok(*val),
-            _ => anyhow::bail!("{} is not an integer", self),
+            _ => {
+                return Err(super::IntyError::TypeError {
+                    message: format!("{} is not an integer", self),
+                })
+            }
         }
     }
 
-    pub fn unwrap_bool(&self) -> anyhow::Result<bool> {
+    pub fn unwrap_bool(&self) -> IntyResult<bool> {
         match self {
             Value::Bool(val) => Ok(*val),
             Value::Integer(val) => Ok(*val > 0),
