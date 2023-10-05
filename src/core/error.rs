@@ -34,12 +34,18 @@ pub enum IntyError {
     #[error("type error: {message}")]
     TypeError { message: String },
 
-    #[error(transparent)]
+    #[error("parse int error: {0}")]
     ParseIntError(#[from] std::num::ParseIntError),
 
-    #[error(transparent)]
+    #[error("i/o error: {0}")]
     IOError(#[from] std::io::Error),
 
-    #[error(transparent)]
+    #[error("readline error: {0}")]
     ReadlineError(#[from] rustyline::error::ReadlineError),
+
+    #[error("borrow error: {0}")]
+    BorrowError(#[from] std::cell::BorrowError),
+
+    #[error("borrow mut error: {0}")]
+    BorrowMutError(#[from] std::cell::BorrowMutError),
 }

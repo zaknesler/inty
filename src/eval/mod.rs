@@ -1,17 +1,23 @@
 mod env;
 
+use std::{cell::RefCell, rc::Rc};
+
 use self::env::Environment;
 use crate::core::*;
 
 pub struct Evaluator {
-    env: Environment,
+    env: Rc<RefCell<Environment>>,
 }
 
 impl Evaluator {
     pub fn new() -> Self {
         Self {
-            env: Environment::new(),
+            env: Rc::new(RefCell::new(Environment::new())),
         }
+    }
+
+    pub fn new_with_env(env: Rc<RefCell<Environment>>) -> Self {
+        Self { env }
     }
 
     /// Evaluate a program's statements into a list of values
@@ -42,13 +48,20 @@ impl Evaluator {
                 }
             }
             Stmt::Let { ident, expr } => {
-                self.env.put(ident.clone(), self.eval_expr(expr)?);
+                let val = self.eval_expr(expr)?;
+                self.env.try_borrow_mut()?.put(ident.clone(), val);
                 None
             }
             Stmt::Block(stmts) => {
+                // I dunno if this is just a gap in my knowledge, but the
+                // following line would need to be `mut` if we allowed re-assignment,
+                // but we don't so this is good for now. Shadowing works.
+                let env = Environment::new_with_parent(self.env.clone());
+                let mut eval = Evaluator::new_with_env(Rc::new(RefCell::new(env)));
+
                 if let Some(val) = stmts
                     .iter()
-                    .map(|stmt| self.eval_stmt(stmt))
+                    .map(|stmt| eval.eval_stmt(stmt))
                     .collect::<Vec<_>>()
                     .pop()
                 {
@@ -67,7 +80,7 @@ impl Evaluator {
     fn eval_expr(&self, expr: &Expr) -> IntyResult<Value> {
         Ok(match expr {
             Expr::Integer(val) => Value::Integer(*val),
-            Expr::Ident(ident) => match self.env.get(ident.clone()) {
+            Expr::Ident(ident) => match self.env.try_borrow()?.get(ident.clone()) {
                 Some(val) => val.clone(),
                 None => {
                     return Err(IntyError::UnknownIdentifier {
@@ -213,6 +226,7 @@ mod tests {
             42,
             evaler
                 .env
+                .borrow()
                 .get("foo".into())
                 .unwrap()
                 .unwrap_integer()

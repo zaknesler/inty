@@ -168,6 +168,9 @@ mod tests {
             ("9 >= 10", Value::Bool(false)),
             ("if true 1 else 2", Value::Integer(1)),
             ("if !true 1 else 2", Value::Integer(2)),
+            ("{ let x = 1; x }", Value::Integer(1)),
+            ("{ let x = 1; let x = 2; x }", Value::Integer(2)),
+            ("{ let x = 1; { let x = 2 }; x }", Value::Integer(1)),
         ]
         .into_iter()
         .enumerate()
