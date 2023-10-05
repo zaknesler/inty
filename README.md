@@ -10,6 +10,7 @@ Basic interpreter written in Rust, not following any particular guides or langua
 - [x] Variable assignment, e.g. `let x = 3`
 - [x] Scoping, e.g. `{ let x = 3; x } => 3`
 - [x] Shadowing, e.g. `{ let x = 3; { let x = 4 }; x } => 3`
+- [x] Branching, e.g. `if 4 >= 3 then { 1 } else { 2 }`
 
 #### Eventually
 
