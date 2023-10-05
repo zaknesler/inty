@@ -656,4 +656,26 @@ mod tests {
             .unwrap()
         );
     }
+
+    #[test]
+    fn parsing_arrays() {
+        assert_eq!(
+            vec![Stmt::Expr(Expr::List(vec![
+                Expr::Integer(1),
+                Expr::Integer(2),
+                Expr::Integer(3)
+            ]))],
+            Parser::new(&vec![
+                Token::LeftBracket,
+                Token::Integer(1),
+                Token::Comma,
+                Token::Integer(2),
+                Token::Comma,
+                Token::Integer(3),
+                Token::RightBracket,
+            ])
+            .parse()
+            .unwrap()
+        );
+    }
 }
