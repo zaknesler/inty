@@ -327,11 +327,10 @@ impl<'a> Parser<'a> {
                 let mut values = Vec::new();
 
                 while let Some(next) = self.peek() {
-                    if next == &Token::Comma {
-                        self.advance();
-                        values.push(self.parse_or()?);
-                    } else {
-                        break;
+                    match &next {
+                        Token::Comma => self.advance(),
+                        Token::RightBracket => break,
+                        _ => values.push(self.parse_or()?),
                     }
                 }
 
