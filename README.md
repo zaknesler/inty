@@ -11,10 +11,10 @@ Basic interpreter written in Rust, not following any particular guides or langua
 - [x] Scoping, e.g. `{ let x = 3; x } => 3`
 - [x] Shadowing, e.g. `{ let x = 3; { let x = 4 }; x } => 3`
 - [x] Branching, e.g. `if 4 >= 3 then { 1 } else { 2 }`
+- [x] Arrays, e.g. `[0, 1, 2, 3]`
 
 #### Eventually
 
-- [ ] Arrays, e.g. `[0, 1, 2, 3]`
 - [ ] Loops, e.g. `for x in [0, 1, 2, 3] { x }`
 - [ ] Variable re-assignment, e.g. `{ let x = 3; x = 4; x } => 4`
 - [ ] Functions, e.g. `{ fn foo(x) { x + 3 }; foo(1) } => 4`
