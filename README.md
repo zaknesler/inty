@@ -1,6 +1,6 @@
 ### inty
 
-Basic interpreter written in Rust, not following any particular guides or languages. This is just a fun little project, and I'm probably doing things incorrectly. The tests pass.
+Basic interpreter written in Rust, not following any particular guides or languages. This is just a fun little project and I'm probably doing things incorrectly, but the tests pass.
 
 #### Features
 
