@@ -39,7 +39,7 @@ impl Evaluator {
                 branch: block,
                 else_branch: else_block,
             } => {
-                if self.eval_expr(test)?.unwrap_bool()? {
+                if self.eval_expr(test)?.try_parse_bool()? {
                     self.eval_stmt(block)?
                 } else if let Some(else_block) = else_block {
                     self.eval_stmt(else_block)?
@@ -100,24 +100,24 @@ impl Evaluator {
                     }
                 }
                 UnOp::Plus => self.eval_expr(value)?,
-                UnOp::Negate => Value::Bool(!self.eval_expr(value)?.unwrap_bool()?),
+                UnOp::Negate => Value::Bool(!self.eval_expr(value)?.try_parse_bool()?),
             },
             Expr::Binary { operator, lhs, rhs } => Value::Integer(match operator {
                 BinOp::Add => {
-                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
-                        + self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                    self.eval_expr(lhs.as_ref())?.try_parse_int()?
+                        + self.eval_expr(rhs.as_ref())?.try_parse_int()?
                 }
                 BinOp::Sub => {
-                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
-                        - self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                    self.eval_expr(lhs.as_ref())?.try_parse_int()?
+                        - self.eval_expr(rhs.as_ref())?.try_parse_int()?
                 }
                 BinOp::Mul => {
-                    self.eval_expr(lhs.as_ref())?.unwrap_integer()?
-                        * self.eval_expr(rhs.as_ref())?.unwrap_integer()?
+                    self.eval_expr(lhs.as_ref())?.try_parse_int()?
+                        * self.eval_expr(rhs.as_ref())?.try_parse_int()?
                 }
                 BinOp::Div => {
-                    let left = self.eval_expr(lhs.as_ref())?.unwrap_integer()?;
-                    let right = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
+                    let left = self.eval_expr(lhs.as_ref())?.try_parse_int()?;
+                    let right = self.eval_expr(rhs.as_ref())?.try_parse_int()?;
 
                     match right {
                         0 => return Err(IntyError::DivideByZeroError),
@@ -125,8 +125,8 @@ impl Evaluator {
                     }
                 }
                 BinOp::Pow => {
-                    let base = self.eval_expr(lhs.as_ref())?.unwrap_integer()?;
-                    let pow = self.eval_expr(rhs.as_ref())?.unwrap_integer()?;
+                    let base = self.eval_expr(lhs.as_ref())?.try_parse_int()?;
+                    let pow = self.eval_expr(rhs.as_ref())?.try_parse_int()?;
 
                     if pow < 0 {
                         return Err(IntyError::LogicError {
@@ -138,8 +138,8 @@ impl Evaluator {
                 }
             }),
             Expr::Logical { operator, lhs, rhs } => Value::Bool({
-                let left = self.eval_expr(lhs.as_ref())?.unwrap_bool()?;
-                let right = self.eval_expr(rhs.as_ref())?.unwrap_bool()?;
+                let left = self.eval_expr(lhs.as_ref())?.try_parse_bool()?;
+                let right = self.eval_expr(rhs.as_ref())?.try_parse_bool()?;
 
                 match operator {
                     LogOp::And => left && right,
@@ -229,7 +229,7 @@ mod tests {
                 .borrow()
                 .get("foo".into())
                 .unwrap()
-                .unwrap_integer()
+                .try_parse_int()
                 .unwrap()
         );
     }

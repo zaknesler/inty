@@ -21,13 +21,6 @@ impl Environment {
         }
     }
 
-    pub fn wrap(self) -> Self {
-        Self {
-            table: HashMap::new(),
-            parent: Some(Rc::new(RefCell::new(self))),
-        }
-    }
-
     /// Try to get a value from the environment by its identifier
     pub fn get(&self, ident: String) -> Option<Value> {
         match self.table.get(&ident) {

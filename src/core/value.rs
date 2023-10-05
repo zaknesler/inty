@@ -19,7 +19,7 @@ impl Display for Value {
 }
 
 impl Value {
-    pub fn unwrap_integer(&self) -> IntyResult<i32> {
+    pub fn try_parse_int(&self) -> IntyResult<i32> {
         match self {
             Value::Integer(val) => Ok(*val),
             _ => {
@@ -30,7 +30,7 @@ impl Value {
         }
     }
 
-    pub fn unwrap_bool(&self) -> IntyResult<bool> {
+    pub fn try_parse_bool(&self) -> IntyResult<bool> {
         match self {
             Value::Bool(val) => Ok(*val),
             Value::Integer(val) => Ok(*val > 0),
