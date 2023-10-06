@@ -1,6 +1,6 @@
 ### inty
 
-Basic interpreter written in Rust, not following any particular guides or languages. This is just a fun little project and is not too serious, but all the tests pass. It uses a basic recursive-descent parser, but I would like to rewrite it using a grammar such as `pest.rs` or a parser combinator like `nom`.
+Basic interpreter written in Rust, not following any particular guides or languages. This is just a fun little project and is not too serious, but all the tests pass. It uses a basic recursive descent parser, but I would like to rewrite it using a grammar such as `pest.rs` or a parser combinator like `nom`.
 
 #### Features
 
